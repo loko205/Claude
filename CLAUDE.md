@@ -5,6 +5,7 @@
 - Paketmanager: uv (NICHT pip)
 - Code-Stil: Kurz, pragmatisch, keine übertriebene Abstraktion
 - Tests: Immer vor Commit ausführen
+- Post-Task: Automatisch simplify + review nach jeder Code-Änderung
 - Git: Feature-Branches, keine direkten Pushes auf main
 - Modell: Opus mit Thinking für alles (nie auf Sonnet wechseln für Code-Tasks)
 
@@ -27,6 +28,7 @@ Lies die Projektstruktur mit `find . -type f -name "*.py"` (oder passendes Patte
 5. IMMER Plan Mode nutzen bei Tasks > 50 Zeilen Code
 6. IMMER von einem sauberen Git-State starten
 7. NIEMALS --dangerously-skip-permissions nutzen, stattdessen /permissions
+8. IMMER nach Code-Änderungen automatisch Simplify und Review durchführen bevor du dich als fertig meldest
 
 ## GELERNTE REGELN
 <!-- Wächst automatisch durch den Self-Improvement Zyklus -->
@@ -41,10 +43,12 @@ Lies die Projektstruktur mit `find . -type f -name "*.py"` (oder passendes Patte
 3. Erstelle einen Plan (Plan Mode / Shift+Tab zweimal)
 4. Warte auf meine Bestätigung bevor du Code schreibst
 
-### Nach jedem Task:
+### Nach jedem Task (AUTOMATISCH, ohne Aufforderung):
 1. Tests ausführen
-2. Prüfe ob nur die beabsichtigten Dateien geändert wurden
-3. Kurze Zusammenfassung der Änderungen
+2. Code vereinfachen (wie `/simplify` — prüfe auf unnötige Komplexität, ungenutzte Imports, Wiederverwendung)
+3. Code-Review durchführen (wie `/review` — prüfe auf Logik-Fehler, Edge Cases, Security, Performance)
+4. Prüfe ob nur die beabsichtigten Dateien geändert wurden
+5. Kurze Zusammenfassung der Änderungen + Ergebnisse aus Simplify & Review
 
 ### Verifikation:
 IMMER deine eigene Arbeit verifizieren bevor du sie als fertig meldest. Das ist der wichtigste Punkt im gesamten Workflow (Faktor 2-3x Qualität). Nutze Tests, Type-Checks, oder manuelles Überprüfen der Ausgabe.
