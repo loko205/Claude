@@ -1,180 +1,82 @@
-# Plan: $90 USDC Experiment — Solana
+# Plan: Hyperliquid Perps Integration
 
 ## Ziel
-Mit $90 USDC auf Solana innerhalb von 1 Woche Gewinn erzielen.
-Realistisches Ziel: ~$200/Monat (Max Abo + API Kosten) = ~$50/Woche.
+Regime-adaptive Strategie (Breakout + Mean Reversion) auf Hyperliquid Perpetuals anwenden.
+Long + Short, 3-5x Hebel, ATR-Stops, Bracket-Orders.
 
-## Rahmenbedingungen
-- **Startkapital:** $90 USDC (Solana)
-- **Chain:** Solana (Fees: ~$0.001 pro TX — ideal für kleine Beträge)
-- **Zeitraum:** 1 Woche
-- **Infrastruktur:** On-Chain + CEX möglich
-- **Verlusttoleranz:** 100% (Experiment)
+Bisherige Backtest-Ergebnisse (Spot, 1x): +$23/Monat auf $90 (25.6% monatlich).
+Mit 3x Hebel + Shorts: Ziel ~$50-70/Monat.
 
----
+## Warum Hyperliquid?
+- Perps mit bis zu 50x Hebel (wir nutzen 3-5x)
+- Long UND Short möglich → Profit in Downtrends
+- 0.045% Taker / **-0.015% Maker Rebate** (Geld verdienen mit Limit-Orders!)
+- Bracket-Orders (Entry + SL + TP atomar)
+- Python SDK: `hyperliquid-python-sdk`
+- User hat schon Wallet + API-Zugang
 
-## Strategie-Übersicht
+## Dateien & Änderungen
 
-### Strategie 1: Solana DEX Arbitrage Bot (Hauptstrategie)
-**Was:** Preisunterschiede zwischen Solana DEXs ausnutzen (Jupiter, Raydium, Orca)
-**Warum:** Solana Fees sind so niedrig, dass selbst kleine Spreads profitabel sein können
-**Erwartung:** Viele kleine Trades, ~0.1-0.5% Gewinn pro Trade
-**Risiko:** Slippage, MEV/Frontrunning, kein Spread vorhanden
+### 1. NEU: `src/exchanges/__init__.py`
+Package init.
 
-### Strategie 2: CEX-DEX Arbitrage (Backup)
-**Was:** Preisunterschiede zwischen Binance/Coinbase und Jupiter/Raydium
-**Warum:** CEX-DEX Spreads sind oft größer als DEX-DEX
-**Erwartung:** Weniger Trades, aber höhere Marge pro Trade
-**Risiko:** Withdrawal-Zeiten, CEX Fees fressen Marge
+### 2. NEU: `src/exchanges/hyperliquid.py` — HL Client
+Klasse `HyperliquidClient`:
+- `__init__(private_key, testnet=True)` — SDK Setup
+- `get_candles(coin, interval, limit)` → list[Candle]
+- `get_balance()` → float (USDC)
+- `get_position(coin)` → dict (size, entry, pnl, leverage)
+- `set_leverage(coin, leverage)`
+- `market_open(coin, is_buy, size_usd, sl_price=None, tp_price=None)` — Bracket-Order
+- `market_close(coin)` — Position schließen
+- `cancel_all(coin)` — Orders canceln
 
-### Strategie 3: Momentum/Trend-Following auf SOL/USDC (Ergänzung)
-**Was:** Einfacher technischer Trading-Bot (EMA Crossover, RSI) auf SOL/USDC
-**Warum:** SOL hat hohe Volatilität = Chancen für Momentum-Strategien
-**Erwartung:** Wenige Trades pro Tag, höherer Gewinn pro Trade
-**Risiko:** Drawdown bei Seitwärtsbewegung, Verlust bei Trendwechsel
+### 3. ÄNDERN: `src/config.py`
+Neue Felder:
+- `hyperliquid_private_key: str`
+- `hyperliquid_testnet: bool = True`
+- `hyperliquid_leverage: int = 3`
+- `use_hyperliquid: bool = False`
 
----
+### 4. ÄNDERN: `src/strategies/momentum.py` — Short-Signals
+- TRENDING down (ADX > 25, price < EMA50): Donchian breakdown → action="short"
+- RANGING: BB upper + RSI > 65 → action="short"
+- Exit-Signale: action="cover" (statt nur "sell")
 
-## Implementierungsplan
+### 5. ÄNDERN: `src/backtesting.py` — Short + Leverage + Fees
+- Short-Trades (Donchian breakdown, BB upper touch)
+- `leverage` Parameter (multipliziert PnL und Drawdown)
+- HL Fees: 0.045% pro Open + Close
+- Funding Rate Simulation (~0.01% pro 8h)
 
-### Phase 1: Setup (Tag 1)
-1. **Projekt-Grundstruktur erstellen**
-   - `pyproject.toml` mit Dependencies (solana-py, jupiter-py, httpx, etc.)
-   - Projekt-Struktur: `src/`, `tests/`, `config/`
-   - `.env` Template für Private Keys, API Keys
+### 6. ÄNDERN: `src/execution/executor.py` — Dual-Exchange
+- `if config.use_hyperliquid:` → HyperliquidClient nutzen
+- Bracket-Orders (Entry + SL + TP in einem Call)
+- Position-Tracking via HL API
 
-2. **Wallet-Integration**
-   - Solana Wallet Connection (read-only zuerst, dann signing)
-   - USDC Balance Check
-   - Transaction Builder
+### 7. ÄNDERN: `src/main.py` — HL in Loop
+- Candles von HL statt Birdeye
+- Execute über HL Client
+- Position-State von API
 
-3. **Daten-Pipeline**
-   - Jupiter Quote API Integration (Preis-Feeds)
-   - Raydium Pool-Daten
-   - Optional: Binance WebSocket für CEX-Preise
+### 8. NEU: `tests/test_hyperliquid.py`
+- Client init, order building, position parsing
 
-**Dateien:** ~5-6 neue Python-Dateien, ~300 Zeilen
-**Dependencies:** solders, solana, httpx, python-dotenv, websockets
+## Reihenfolge
+1. `uv add hyperliquid-python-sdk`
+2. Config erweitern
+3. `src/exchanges/hyperliquid.py` bauen
+4. Strategie um Short-Signals erweitern
+5. Backtester für Short + Leverage + Fees
+6. Backtest laufen lassen (Long+Short+3x Leverage)
+7. Executor dual-exchange
+8. Main Loop
+9. Tests
+10. Push
 
-### Phase 2: Arbitrage Engine (Tag 2-3)
-4. **Price Monitor**
-   - Multi-DEX Preisabfrage (Jupiter, Raydium, Orca)
-   - Spread-Berechnung in Echtzeit
-   - Logging aller gefundenen Opportunities
-
-5. **Arbitrage Executor**
-   - Jupiter Swap API Integration
-   - Slippage-Protection
-   - Profit-Berechnung nach Fees
-   - Minimum-Profit-Threshold (nur traden wenn > X% Gewinn)
-
-6. **Risk Management**
-   - Max Trade Size (% des Portfolios)
-   - Stop-Loss pro Trade
-   - Daily Loss Limit
-   - Cooldown nach Verlusten
-
-**Dateien:** ~4-5 neue Python-Dateien, ~400 Zeilen
-
-### Phase 3: Momentum Bot (Tag 3-4)
-7. **Technische Analyse**
-   - OHLCV Daten von Birdeye/Jupiter
-   - EMA Crossover Strategie (schnell: 9, langsam: 21)
-   - RSI Filter (nur traden wenn RSI < 70 für Long, > 30 für Short)
-
-8. **Trade Execution**
-   - SOL/USDC Swaps via Jupiter
-   - Position Sizing (max 30% pro Trade)
-   - Take-Profit und Stop-Loss
-
-**Dateien:** ~3 neue Python-Dateien, ~250 Zeilen
-
-### Phase 4: Monitoring & Dashboard (Tag 4-5)
-9. **Live Monitoring**
-   - Echtzeit P&L Tracking
-   - Trade History (SQLite oder JSON)
-   - Alerts (Console + optional Telegram)
-
-10. **Simulations-Modus**
-    - Paper-Trading Modus zum Testen
-    - Backtesting mit historischen Daten
-    - Performance-Vergleich der Strategien
-
-**Dateien:** ~3 neue Python-Dateien, ~200 Zeilen
-
-### Phase 5: Go Live & Optimierung (Tag 5-7)
-11. **Paper-Trading Phase** (min. einige Stunden)
-    - Alle Strategien im Simulations-Modus laufen lassen
-    - Ergebnisse analysieren
-    - Parameter tunen
-
-12. **Live Trading**
-    - Mit kleinem Betrag starten ($10)
-    - Schrittweise hochfahren wenn profitabel
-    - Kontinuierliches Monitoring
-
----
-
-## Projektstruktur
-
-```
-src/
-├── __init__.py
-├── config.py              # Settings, Environment Variables
-├── wallet.py              # Solana Wallet Integration
-├── prices/
-│   ├── __init__.py
-│   ├── jupiter.py         # Jupiter Quote API
-│   ├── raydium.py         # Raydium Pool Preise
-│   └── aggregator.py      # Multi-Source Preis-Aggregation
-├── strategies/
-│   ├── __init__.py
-│   ├── arbitrage.py       # DEX Arbitrage Logik
-│   ├── momentum.py        # EMA/RSI Trend-Following
-│   └── base.py            # Strategy Interface
-├── execution/
-│   ├── __init__.py
-│   ├── executor.py        # Trade Execution via Jupiter
-│   └── risk.py            # Risk Management
-├── monitoring/
-│   ├── __init__.py
-│   ├── tracker.py         # P&L Tracking
-│   └── alerts.py          # Alerts
-└── main.py                # Entry Point, Strategy Orchestration
-
-tests/
-├── test_prices.py
-├── test_arbitrage.py
-├── test_risk.py
-└── test_momentum.py
-
-config/
-└── .env.example
-```
-
-## Risiken & Edge Cases
-
-| Risiko | Wahrscheinlichkeit | Impact | Mitigation |
-|--------|-------------------|--------|------------|
-| Totalverlust durch Bug | Mittel | Hoch | Paper-Trading zuerst, schrittweise Erhöhung |
-| MEV/Frontrunning | Hoch | Mittel | Priority Fees, Jito Tips, kleine Trades |
-| Kein profitabler Spread | Mittel | Mittel | Backup-Strategien, mehr Token-Paare |
-| API Rate Limits | Niedrig | Niedrig | Caching, mehrere Endpoints |
-| Solana Netzwerk-Ausfall | Niedrig | Hoch | Automatic Pause, CEX Fallback |
-| Slippage größer als erwartet | Mittel | Mittel | Strict Slippage Limits, kleine Orders |
-| Private Key Leak | Niedrig | Kritisch | .env, .gitignore, separate Wallet |
-
-## Umfang-Schätzung
-
-- **Dateien:** ~20 neue Dateien
-- **Code:** ~1200-1500 Zeilen Python
-- **Dependencies:** ~8-10 Pakete
-- **Zeitaufwand Coding:** ~2-3 Tage intensiv
-
-## Wichtige Sicherheitsregeln
-
-1. **NIEMALS** Private Keys in Code oder Git
-2. **IMMER** Paper-Trading vor Live-Trading
-3. **IMMER** mit kleinem Betrag starten
-4. **IMMER** Stop-Loss und Daily Loss Limit aktiv
-5. **NIEMALS** mehr als 50% des Kapitals in einem Trade
+## Risiko-Mitigierung
+- **Testnet FIRST** — kein echtes Geld
+- Paper-Trading bleibt Default
+- Max Leverage: 5x
+- Liquidation-Check vor Trade
+- Bestehende Risk-Manager Limits gelten
