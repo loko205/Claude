@@ -1,0 +1,33 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'Code geschrieben — prüfe Formatierung'"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "git status",
+      "git diff",
+      "git log",
+      "git add",
+      "git commit",
+      "git push",
+      "git checkout",
+      "git branch",
+      "find . -type f",
+      "cat",
+      "ls",
+      "uv pip install",
+      "uv run",
+      "python -m pytest"
+    ]
+  }
+}
