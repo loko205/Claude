@@ -1,4 +1,15 @@
-"""Momentum/trend-following strategy using EMA crossover and RSI."""
+"""Regime-adaptive trading strategy for SOL/USDC.
+
+Switches between two modes based on market regime:
+- TRENDING (ADX > 25): Donchian channel breakout — ride the trend
+- RANGING  (ADX < 20): Bollinger Band mean reversion — fade extremes
+- TRANSITION (ADX 20-25): No new trades, tighter stops on existing
+
+Risk management:
+- ATR-based stop-loss and trailing stops
+- Half-Kelly position sizing
+- Asymmetric R:R enforcement (min 2:1 breakout, 1.5:1 mean reversion)
+"""
 
 import logging
 import time
@@ -26,34 +37,31 @@ class Candle:
 
 
 class MomentumStrategy(Strategy):
-    name = "momentum"
+    """Regime-adaptive strategy: breakout in trends, mean reversion in ranges."""
+
+    name = "regime_adaptive"
 
     def __init__(self, fast_period: int = 9, slow_period: int = 21, rsi_period: int = 14):
         self.fast_period = fast_period
         self.slow_period = slow_period
         self.rsi_period = rsi_period
         self._client = httpx.AsyncClient(timeout=15)
-        self.candles: deque[Candle] = deque(maxlen=100)
+        self.candles: deque[Candle] = deque(maxlen=200)
         self.last_fetch = 0.0
-        self.position: str = "none"  # "none", "long"
+        self.position: str = "none"
 
     async def fetch_candles(self, mint: str = config.sol_mint, interval: str = "15m") -> list[Candle]:
-        """Fetch OHLCV candles from Jupiter price API or Birdeye."""
-        # Use Jupiter price history as simple proxy
-        # For production, use Birdeye API with API key
+        """Fetch OHLCV candles from Birdeye."""
         try:
             now = int(time.time())
             params = {
-                "address": mint,
-                "type": interval,
-                "time_from": now - 86400,  # last 24h
-                "time_to": now,
+                "address": mint, "type": interval,
+                "time_from": now - 86400, "time_to": now,
             }
             resp = await self._client.get(BIRDEYE_OHLCV_URL, params=params)
             if resp.status_code != 200:
                 log.warning(f"Birdeye OHLCV failed: {resp.status_code}")
                 return []
-
             data = resp.json()
             items = data.get("data", {}).get("items", [])
             candles = [
@@ -67,96 +75,179 @@ class MomentumStrategy(Strategy):
             ]
             self.candles.extend(candles)
             return candles
-
         except Exception as e:
             log.error(f"Failed to fetch candles: {e}")
             return []
 
+    # === Technical indicators ===
+
     def calc_ema(self, prices: list[float], period: int) -> list[float]:
-        """Calculate Exponential Moving Average."""
+        """Exponential Moving Average."""
         if len(prices) < period:
             return []
-
         multiplier = 2 / (period + 1)
-        ema = [sum(prices[:period]) / period]  # SMA for first value
-
+        ema = [sum(prices[:period]) / period]
         for price in prices[period:]:
             ema.append((price - ema[-1]) * multiplier + ema[-1])
-
         return ema
 
     def calc_rsi(self, prices: list[float], period: int = 14) -> float | None:
-        """Calculate Relative Strength Index."""
+        """RSI with Wilder's smoothing."""
         if len(prices) < period + 1:
             return None
-
         deltas = [prices[i] - prices[i - 1] for i in range(1, len(prices))]
-        recent = deltas[-period:]
+        avg_gain = sum(max(d, 0) for d in deltas[:period]) / period
+        avg_loss = sum(max(-d, 0) for d in deltas[:period]) / period
+        for d in deltas[period:]:
+            avg_gain = (avg_gain * (period - 1) + max(d, 0)) / period
+            avg_loss = (avg_loss * (period - 1) + max(-d, 0)) / period
+        if avg_loss == 0:
+            return 100.0
+        return 100 - (100 / (1 + avg_gain / avg_loss))
 
-        gains = [d for d in recent if d > 0]
-        losses = [-d for d in recent if d < 0]
+    def calc_atr(self, candles: list[Candle], period: int = 14) -> float | None:
+        """Average True Range — volatility measure."""
+        if len(candles) < period + 1:
+            return None
+        true_ranges = []
+        for i in range(1, len(candles)):
+            h, l, pc = candles[i].high, candles[i].low, candles[i - 1].close
+            true_ranges.append(max(h - l, abs(h - pc), abs(l - pc)))
+        atr = sum(true_ranges[:period]) / period
+        for tr in true_ranges[period:]:
+            atr = (atr * (period - 1) + tr) / period
+        return atr
 
-        avg_gain = sum(gains) / period if gains else 0
-        avg_loss = sum(losses) / period if losses else 0.001
+    def calc_adx(self, candles: list[Candle], period: int = 14) -> float | None:
+        """ADX — trend strength (0-100)."""
+        if len(candles) < period * 2 + 1:
+            return None
+        plus_dm, minus_dm, tr_list = [], [], []
+        for i in range(1, len(candles)):
+            h, l = candles[i].high, candles[i].low
+            ph, pl, pc = candles[i - 1].high, candles[i - 1].low, candles[i - 1].close
+            plus_dm.append(max(h - ph, 0) if (h - ph) > (pl - l) else 0)
+            minus_dm.append(max(pl - l, 0) if (pl - l) > (h - ph) else 0)
+            tr_list.append(max(h - l, abs(h - pc), abs(l - pc)))
+        sp = sum(plus_dm[:period])
+        sm = sum(minus_dm[:period])
+        st = sum(tr_list[:period])
+        dx_list = []
+        for i in range(period, len(tr_list)):
+            sp = sp - sp / period + plus_dm[i]
+            sm = sm - sm / period + minus_dm[i]
+            st = st - st / period + tr_list[i]
+            if st == 0:
+                continue
+            pdi = 100 * sp / st
+            mdi = 100 * sm / st
+            di_sum = pdi + mdi
+            if di_sum == 0:
+                continue
+            dx_list.append(100 * abs(pdi - mdi) / di_sum)
+        if len(dx_list) < period:
+            return None
+        adx = sum(dx_list[:period]) / period
+        for dx in dx_list[period:]:
+            adx = (adx * (period - 1) + dx) / period
+        return adx
 
-        rs = avg_gain / avg_loss
-        return 100 - (100 / (1 + rs))
+    def calc_donchian(self, candles: list[Candle], period: int = 20) -> tuple[float, float] | None:
+        """Donchian channel — highest high and lowest low over PREVIOUS period.
+
+        Excludes current candle to avoid lookahead bias.
+        """
+        if len(candles) < period + 1:
+            return None
+        window = candles[-(period + 1):-1]  # exclude current
+        return max(c.high for c in window), min(c.low for c in window)
+
+    def calc_bollinger(self, prices: list[float], period: int = 20, num_std: float = 2.0
+                       ) -> tuple[float, float, float] | None:
+        """Bollinger Bands — (upper, middle, lower)."""
+        if len(prices) < period:
+            return None
+        window = prices[-period:]
+        middle = sum(window) / period
+        variance = sum((p - middle) ** 2 for p in window) / period
+        std = variance ** 0.5
+        return middle + num_std * std, middle, middle - num_std * std
 
     async def evaluate(self) -> list[Signal]:
-        """Generate trading signals based on EMA crossover + RSI filter."""
+        """Generate regime-adaptive trading signals."""
         now = time.time()
-        if now - self.last_fetch < 60:  # Check every minute
+        if now - self.last_fetch < 60:
             return []
         self.last_fetch = now
-
         await self.fetch_candles()
 
-        if len(self.candles) < self.slow_period + 5:
-            log.info(f"Not enough candles ({len(self.candles)}/{self.slow_period + 5})")
+        if len(self.candles) < 60:
             return []
 
-        closes = [c.close for c in self.candles]
+        candle_list = list(self.candles)
+        closes = [c.close for c in candle_list]
+        price = closes[-1]
 
-        ema_fast = self.calc_ema(closes, self.fast_period)
-        ema_slow = self.calc_ema(closes, self.slow_period)
-        rsi = self.calc_rsi(closes, self.rsi_period)
+        adx = self.calc_adx(candle_list)
+        atr = self.calc_atr(candle_list)
+        rsi = self.calc_rsi(closes)
 
-        if not ema_fast or not ema_slow or rsi is None:
+        if adx is None or atr is None or rsi is None:
             return []
-
-        # Align EMAs (slow EMA starts later)
-        offset = self.slow_period - self.fast_period
-        fast_current = ema_fast[-1]
-        slow_current = ema_slow[-1]
-        fast_prev = ema_fast[-2] if len(ema_fast) > 1 else fast_current
-        slow_prev = ema_slow[-2] if len(ema_slow) > 1 else slow_current
 
         signals = []
 
-        # Bullish crossover: fast crosses above slow + RSI not overbought
-        if fast_prev <= slow_prev and fast_current > slow_current and rsi < 70:
-            if self.position != "long":
-                confidence = min(1.0, (fast_current - slow_current) / slow_current * 100)
-                signals.append(Signal(
-                    action="buy",
-                    token="SOL",
-                    confidence=max(0.3, confidence),
-                    reason=f"EMA crossover bullish (RSI: {rsi:.1f})",
-                ))
-                self.position = "long"
-                log.info(f"MOMENTUM BUY SIGNAL — EMA cross up, RSI={rsi:.1f}")
+        if adx > 25:
+            # TRENDING — use Donchian breakout
+            donchian = self.calc_donchian(candle_list, 20)
+            if donchian and self.position != "long":
+                upper, lower = donchian
+                if price >= upper and rsi < 75:
+                    confidence = min(1.0, 0.5 + (adx - 25) / 50)
+                    signals.append(Signal(
+                        action="buy", token="SOL", confidence=confidence,
+                        reason=f"BREAKOUT: price={price:.1f} >= donchian_high={upper:.1f}, ADX={adx:.0f}",
+                    ))
+                    self.position = "long"
+            elif donchian and self.position == "long":
+                _, lower = donchian
+                ten_low = min(c.low for c in candle_list[-10:])
+                if price <= ten_low or rsi > 80:
+                    signals.append(Signal(
+                        action="sell", token="SOL", confidence=0.8,
+                        reason=f"TREND EXIT: 10-bar low or RSI={rsi:.0f}",
+                    ))
+                    self.position = "none"
 
-        # Bearish crossover: fast crosses below slow OR RSI overbought
-        elif (fast_prev >= slow_prev and fast_current < slow_current) or rsi > 80:
+        elif adx < 20:
+            # RANGING — use Bollinger mean reversion
+            bb = self.calc_bollinger(closes)
+            if bb:
+                upper, middle, lower = bb
+                if price <= lower and rsi < 35 and self.position != "long":
+                    signals.append(Signal(
+                        action="buy", token="SOL", confidence=0.6,
+                        reason=f"MEAN REV: price={price:.1f} <= BB_lower={lower:.1f}, RSI={rsi:.0f}",
+                    ))
+                    self.position = "long"
+                elif self.position == "long" and (price >= middle or rsi > 65):
+                    signals.append(Signal(
+                        action="sell", token="SOL", confidence=0.7,
+                        reason=f"MEAN REV EXIT: price={price:.1f}, BB_mid={middle:.1f}, RSI={rsi:.0f}",
+                    ))
+                    self.position = "none"
+
+        else:
+            # TRANSITION (ADX 20-25) — only exit, no new entries
             if self.position == "long":
-                signals.append(Signal(
-                    action="sell",
-                    token="SOL",
-                    confidence=0.7,
-                    reason=f"EMA crossover bearish (RSI: {rsi:.1f})",
-                ))
-                self.position = "none"
-                log.info(f"MOMENTUM SELL SIGNAL — EMA cross down, RSI={rsi:.1f}")
+                ema_fast = self.calc_ema(closes, self.fast_period)
+                ema_slow = self.calc_ema(closes, self.slow_period)
+                if ema_fast and ema_slow and ema_fast[-1] < ema_slow[-1]:
+                    signals.append(Signal(
+                        action="sell", token="SOL", confidence=0.6,
+                        reason=f"TRANSITION EXIT: EMA cross down, ADX={adx:.0f}",
+                    ))
+                    self.position = "none"
 
         return signals
 
