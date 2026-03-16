@@ -62,7 +62,7 @@ class BacktestResult:
 
     @property
     def sells(self) -> list[BacktestTrade]:
-        return [t for t in self.trades if t.action == "sell"]
+        return [t for t in self.trades if t.action in ("sell", "cover")]
 
     @property
     def win_count(self) -> int:
@@ -107,10 +107,12 @@ class BacktestResult:
         return self.pnl / days * 7 if days > 0 else 0
 
     def report(self) -> str:
-        breakout_sells = [t for t in self.sells if "BREAKOUT" in t.regime or "TREND" in t.regime]
+        breakout_sells = [t for t in self.sells if "BREAKOUT" in t.regime or "TREND" in t.regime or "BREAKDOWN" in t.regime]
         mr_sells = [t for t in self.sells if "MEAN" in t.regime or "RANGE" in t.regime]
         bo_pnl = sum(t.pnl for t in breakout_sells)
         mr_pnl = sum(t.pnl for t in mr_sells)
+        long_sells = [t for t in self.sells if "SHORT" not in t.regime]
+        short_sells = [t for t in self.sells if "SHORT" in t.regime]
 
         lines = [
             "=" * 60,
@@ -127,6 +129,8 @@ class BacktestResult:
             "",
             f"  Breakout P&L:     ${bo_pnl:+.2f} ({len(breakout_sells)} trades)",
             f"  MeanRev P&L:      ${mr_pnl:+.2f} ({len(mr_sells)} trades)",
+            f"  Long P&L:         ${sum(t.pnl for t in long_sells):+.2f} ({len(long_sells)} trades)",
+            f"  Short P&L:        ${sum(t.pnl for t in short_sells):+.2f} ({len(short_sells)} trades)",
             "",
             f"  Start:            ${self.start_balance:.2f}",
             f"  End:              ${self.final_balance:.2f}",
@@ -138,7 +142,7 @@ class BacktestResult:
         if self.trades:
             lines.append("  Trades:")
             for t in self.trades[-20:]:
-                pnl_s = f" PnL=${t.pnl:+.2f}" if t.action == "sell" else ""
+                pnl_s = f" PnL=${t.pnl:+.2f}" if t.action in ("sell", "cover") else ""
                 lines.append(
                     f"    {t.action.upper():4s} @ ${t.price:>8.2f} "
                     f"(${t.size_usdc:>6.2f}){pnl_s} [{t.regime}] {t.reason}"
@@ -183,10 +187,23 @@ async def run_backtest(
     current_regime = ""
     take_profit = 0.0
 
+    # Short tracking
+    short_tokens = 0.0
+    short_entry_price = 0.0
+    short_entry_size = 0.0
+    short_stop_loss = 0.0
+    short_trailing_stop = 0.0
+    short_trough_price = 0.0
+    short_take_profit = 0.0
+    short_regime = ""
+
     min_candles = max(donchian_period, bb_period, 50) + 15
 
+    window_size = 200  # rolling window to avoid O(n^2) recalculation
+
     for i in range(min_candles, len(candles)):
-        window = candles[:i + 1]
+        start = max(0, i + 1 - window_size)
+        window = candles[start:i + 1]
         closes = [c.close for c in window]
         price = closes[-1]
 
@@ -207,7 +224,7 @@ async def run_backtest(
 
         result.regime_counts[regime.value] = result.regime_counts.get(regime.value, 0) + 1
 
-        # === POSITION MANAGEMENT ===
+        # === LONG POSITION MANAGEMENT ===
         if position_tokens > 0:
             # Update trailing stop (only moves up)
             if price > peak_price:
@@ -269,18 +286,80 @@ async def run_backtest(
                 position_tokens = 0
                 continue
 
+        # === SHORT POSITION MANAGEMENT ===
+        if short_tokens > 0:
+            # Update trailing stop for shorts (only moves down)
+            if price < short_trough_price:
+                short_trough_price = price
+                new_trail = price + atr_trail_mult * atr
+                short_trailing_stop = min(short_trailing_stop, new_trail) if short_trailing_stop > 0 else new_trail
+
+            hit_stop = price >= short_stop_loss
+            hit_trail = short_trailing_stop > 0 and price >= short_trailing_stop and short_trailing_stop < short_stop_loss
+            hit_tp = short_take_profit > 0 and price <= short_take_profit
+
+            regime_exit = False
+            if short_regime == "SHORT_BREAKDOWN" and regime == Regime.RANGING:
+                regime_exit = True
+            if short_regime == "SHORT_MEAN_REV" and regime == Regime.TRENDING:
+                regime_exit = True
+
+            breakdown_exit = False
+            if short_regime == "SHORT_BREAKDOWN" and len(window) >= donchian_exit:
+                exit_high = max(c.high for c in window[-donchian_exit:])
+                if price >= exit_high:
+                    breakdown_exit = True
+
+            mr_exit = False
+            if short_regime == "SHORT_MEAN_REV":
+                bb = strategy.calc_bollinger(closes, bb_period, bb_std)
+                if bb:
+                    _, middle, _ = bb
+                    if price <= middle or rsi < rsi_buy:
+                        mr_exit = True
+
+            if hit_stop or hit_trail or hit_tp or regime_exit or breakdown_exit or mr_exit:
+                # Short P&L: profit when price drops
+                pnl = short_entry_size * (short_entry_price - price) / short_entry_price
+                balance += short_entry_size + pnl
+                reason_parts = []
+                if hit_stop:
+                    reason_parts.append("STOP-LOSS")
+                elif hit_trail:
+                    reason_parts.append(f"TRAIL(trough=${short_trough_price:.2f})")
+                elif hit_tp:
+                    reason_parts.append("TAKE-PROFIT")
+                elif breakdown_exit:
+                    reason_parts.append(f"DONCHIAN-EXIT({donchian_exit})")
+                elif mr_exit:
+                    reason_parts.append("BB-MID/RSI-NORM")
+                elif regime_exit:
+                    reason_parts.append("REGIME-CHANGE")
+
+                result.trades.append(BacktestTrade(
+                    timestamp=candles[i].timestamp, action="cover",
+                    price=price, size_usdc=short_entry_size + pnl, pnl=pnl,
+                    regime=short_regime,
+                    reason=" ".join(reason_parts),
+                ))
+                short_tokens = 0
+                continue
+
         # === ENTRIES ===
-        if position_tokens == 0 and balance > 1:
+        if position_tokens == 0 and short_tokens == 0 and balance > 1:
 
             # TRENDING: Donchian breakout
             if regime == Regime.TRENDING:
                 donchian = strategy.calc_donchian(window, donchian_period)
                 if donchian:
                     upper, lower = donchian
-                    # Price breaks above channel high AND RSI not overbought
-                    if price >= upper and rsi < 75:
+                    ema_fast = strategy.calc_ema(closes, 9)
+                    ema_slow = strategy.calc_ema(closes, 21)
+                    trend_up = ema_fast and ema_slow and ema_fast[-1] > ema_slow[-1]
+
+                    # Long breakout
+                    if price >= upper and rsi < 75 and trend_up:
                         size = balance * breakout_size_pct / 100
-                        # Strong trend bonus
                         if adx > 35:
                             size = min(balance * (breakout_size_pct + 15) / 100, balance * 0.75)
                         tokens = size / price
@@ -291,7 +370,7 @@ async def run_backtest(
                         peak_price = price
                         stop_loss = price - atr_stop_mult * atr
                         trailing_stop = price - atr_trail_mult * atr
-                        take_profit = 0  # let winners run
+                        take_profit = 0
                         current_regime = "BREAKOUT"
 
                         result.trades.append(BacktestTrade(
@@ -301,12 +380,35 @@ async def run_backtest(
                                    f"RSI={rsi:.0f}, SL=${stop_loss:.2f}",
                         ))
 
+                    # Short breakdown
+                    elif price <= lower and rsi > 25 and not trend_up:
+                        size = balance * breakout_size_pct / 100
+                        if adx > 35:
+                            size = min(balance * (breakout_size_pct + 15) / 100, balance * 0.75)
+                        short_tokens = size / price
+                        balance -= size
+                        short_entry_price = price
+                        short_entry_size = size
+                        short_trough_price = price
+                        short_stop_loss = price + atr_stop_mult * atr
+                        short_trailing_stop = 0
+                        short_take_profit = 0
+                        short_regime = "SHORT_BREAKDOWN"
+
+                        result.trades.append(BacktestTrade(
+                            timestamp=candles[i].timestamp, action="short",
+                            price=price, size_usdc=size, regime="SHORT_BREAKDOWN",
+                            reason=f"DONCHIAN({donchian_period}) breakdown, ADX={adx:.0f}, "
+                                   f"RSI={rsi:.0f}, SL=${short_stop_loss:.2f}",
+                        ))
+
             # RANGING: Bollinger Band mean reversion
             elif regime == Regime.RANGING:
                 bb = strategy.calc_bollinger(closes, bb_period, bb_std)
                 if bb:
                     upper, middle, lower = bb
-                    # Price touches lower band + RSI oversold
+
+                    # Long at lower band
                     if price <= lower and rsi < rsi_buy:
                         size = balance * mr_size_pct / 100
                         tokens = size / price
@@ -316,8 +418,8 @@ async def run_backtest(
                         entry_size = size
                         peak_price = price
                         stop_loss = price - atr_stop_mult * atr
-                        trailing_stop = 0  # use BB-mid as exit instead
-                        take_profit = middle  # target = middle band
+                        trailing_stop = 0
+                        take_profit = middle
                         current_regime = "MEAN_REV"
 
                         result.trades.append(BacktestTrade(
@@ -327,13 +429,34 @@ async def run_backtest(
                                    f"RSI={rsi:.0f}, TP=${middle:.2f}",
                         ))
 
-        # Track drawdown
-        total_value = balance + position_tokens * price
+                    # Short at upper band
+                    elif price >= upper and rsi > rsi_sell:
+                        size = balance * mr_size_pct / 100
+                        short_tokens = size / price
+                        balance -= size
+                        short_entry_price = price
+                        short_entry_size = size
+                        short_trough_price = price
+                        short_stop_loss = price + atr_stop_mult * atr
+                        short_trailing_stop = 0
+                        short_take_profit = middle
+                        short_regime = "SHORT_MEAN_REV"
+
+                        result.trades.append(BacktestTrade(
+                            timestamp=candles[i].timestamp, action="short",
+                            price=price, size_usdc=size, regime="SHORT_MEAN_REV",
+                            reason=f"BB upper touch, ADX={adx:.0f}, "
+                                   f"RSI={rsi:.0f}, TP=${middle:.2f}",
+                        ))
+
+        # Track drawdown (include short position value)
+        short_value = (short_entry_size + short_entry_size * (short_entry_price - price) / short_entry_price) if short_tokens > 0 else 0
+        total_value = balance + position_tokens * price + short_value
         peak_balance = max(peak_balance, total_value)
         dd = (peak_balance - total_value) / peak_balance * 100 if peak_balance > 0 else 0
         result.max_drawdown_pct = max(result.max_drawdown_pct, dd)
 
-    # Force-close
+    # Force-close long
     if position_tokens > 0 and candles:
         last = candles[-1].close
         sell_value = position_tokens * last
@@ -343,6 +466,17 @@ async def run_backtest(
             timestamp=candles[-1].timestamp, action="sell",
             price=last, size_usdc=sell_value, pnl=pnl,
             regime=current_regime, reason="END — forced close",
+        ))
+
+    # Force-close short
+    if short_tokens > 0 and candles:
+        last = candles[-1].close
+        pnl = short_entry_size * (short_entry_price - last) / short_entry_price
+        balance += short_entry_size + pnl
+        result.trades.append(BacktestTrade(
+            timestamp=candles[-1].timestamp, action="cover",
+            price=last, size_usdc=short_entry_size + pnl, pnl=pnl,
+            regime=short_regime, reason="END — forced close",
         ))
 
     result.final_balance = balance
