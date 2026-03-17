@@ -1,10 +1,10 @@
 --[[
-    ProcessingData.lua — Verarbeitungssystem für Bloom & Brew
-    5 Methoden um Pflanzen zu Extrakten zu verarbeiten:
-    Trocknen → Mörsern → Pressen → Destillieren → Äther-Extraktion
+    ProcessingData.lua — Processing system for Bloom & Brew
+    5 methods to process plants into extracts:
+    Drying → Grinding → Pressing → Distilling → Aether Extraction
 
-    Jede Pflanze braucht die richtige Methode für optimale Ausbeute.
-    Falsche Methode = Pflanze zerstört!
+    Each plant needs the right method for optimal yield.
+    Wrong method = plant destroyed!
 ]]
 
 local Config = require(script.Parent.Config)
@@ -12,86 +12,86 @@ local Config = require(script.Parent.Config)
 local ProcessingData = {}
 
 -- ============================================================
--- VERARBEITUNGSMETHODEN
+-- PROCESSING METHODS
 -- ============================================================
 
 ProcessingData.Methods = {
-    Trocknen = {
-        Id = "Trocknen",
-        Name = "Trocknen",
-        MachineName = "Trockengestell",
-        Desc = "Hänge die Pflanze kopfüber auf und lass die Luft ihre Arbeit machen. Wie Wäsche, nur magischer.",
-        LongDesc = "Die älteste und einfachste Methode der Wirkstoffgewinnung. Die Pflanze wird an einem luftigen Ort aufgehängt, bis die Feuchtigkeit entwichen ist und die Wirkstoffe konzentriert zurückbleiben. Perfekt für Blätter und Kräuter.",
+    Drying = {
+        Id = "Drying",
+        Name = "Drying",
+        MachineName = "Drying Rack",
+        Desc = "Hang the plant upside down and let the air do its thing. Like laundry, but more magical.",
+        LongDesc = "The oldest and simplest method of extracting active ingredients. The plant is hung in a well-ventilated area until the moisture has evaporated and the compounds remain concentrated. Perfect for leaves and herbs.",
         Icon = "rbxassetid://0", -- Placeholder
-        Cost = Config.Processing.Methods.Trocknen.Cost,
-        LevelReq = Config.Processing.Methods.Trocknen.LevelReq,
-        BaseDuration = Config.Processing.Methods.Trocknen.BaseDuration,
-        Category = "Einfach",
-        OutputType = "Getrocknete Blätter/Kräuter",
+        Cost = Config.Processing.Methods.Drying.Cost,
+        LevelReq = Config.Processing.Methods.Drying.LevelReq,
+        BaseDuration = Config.Processing.Methods.Drying.BaseDuration,
+        Category = "Basic",
+        OutputType = "Dried Leaves/Herbs",
     },
 
-    Moersern = {
-        Id = "Moersern",
-        Name = "Mörsern",
-        MachineName = "Steinmörser",
-        Desc = "Stampf die Pflanze zu feinem Pulver. Armtraining inklusive!",
-        LongDesc = "Mit dem schweren Steinmörser werden Pflanzenteile zerrieben und zerstoßen. So werden Sporen freigesetzt, kristalline Strukturen gebrochen und verborgene Wirkstoffe zugänglich gemacht. Ideal für harte, feste Pflanzenteile.",
+    Grinding = {
+        Id = "Grinding",
+        Name = "Grinding",
+        MachineName = "Stone Mortar",
+        Desc = "Crush the plant into fine powder. Free arm workout included!",
+        LongDesc = "The heavy stone mortar grinds and crushes plant parts. This releases spores, breaks crystalline structures, and unlocks hidden active ingredients. Ideal for hard, solid plant parts.",
         Icon = "rbxassetid://0",
-        Cost = Config.Processing.Methods.Moersern.Cost,
-        LevelReq = Config.Processing.Methods.Moersern.LevelReq,
-        BaseDuration = Config.Processing.Methods.Moersern.BaseDuration,
-        Category = "Einfach",
-        OutputType = "Pulver/Sporen",
+        Cost = Config.Processing.Methods.Grinding.Cost,
+        LevelReq = Config.Processing.Methods.Grinding.LevelReq,
+        BaseDuration = Config.Processing.Methods.Grinding.BaseDuration,
+        Category = "Basic",
+        OutputType = "Powder/Spores",
     },
 
-    Pressen = {
-        Id = "Pressen",
-        Name = "Pressen",
-        MachineName = "Pflanzenpresse",
-        Desc = "Quetsche jeden Tropfen Saft raus. Die Pflanze wird's überleben — naja, eigentlich nicht.",
-        LongDesc = "Die mechanische Presse extrahiert Säfte, Öle und Nektare aus saftigen Pflanzenteilen. Durch kontrollierten Druck werden flüssige Wirkstoffe gewonnen, ohne sie durch Hitze zu zerstören. Perfekt für Blüten und fleischige Pflanzen.",
+    Pressing = {
+        Id = "Pressing",
+        Name = "Pressing",
+        MachineName = "Plant Press",
+        Desc = "Squeeze every last drop of juice out. The plant will survive — well, actually no.",
+        LongDesc = "The mechanical press extracts juices, oils, and nectars from succulent plant parts. Controlled pressure yields liquid compounds without destroying them through heat. Perfect for blossoms and fleshy plants.",
         Icon = "rbxassetid://0",
-        Cost = Config.Processing.Methods.Pressen.Cost,
-        LevelReq = Config.Processing.Methods.Pressen.LevelReq,
-        BaseDuration = Config.Processing.Methods.Pressen.BaseDuration,
-        Category = "Fortgeschritten",
-        OutputType = "Öl/Saft/Nektar",
+        Cost = Config.Processing.Methods.Pressing.Cost,
+        LevelReq = Config.Processing.Methods.Pressing.LevelReq,
+        BaseDuration = Config.Processing.Methods.Pressing.BaseDuration,
+        Category = "Advanced",
+        OutputType = "Oil/Juice/Nectar",
     },
 
-    Destillieren = {
-        Id = "Destillieren",
-        Name = "Destillieren",
-        MachineName = "Destille",
-        Desc = "Dampf rein, Magie raus. Wie Kochen, aber mit mehr Wissenschaft und weniger Essen.",
-        LongDesc = "Durch erhitzen und kontrolliertes Auffangen des Dampfes werden flüchtige ätherische Substanzen extrahiert. Die Destille trennt Wirkstoffe präzise nach Siedepunkt — das reinste Verfahren für empfindliche, gasförmige oder hitzelösliche Substanzen.",
+    Distilling = {
+        Id = "Distilling",
+        Name = "Distilling",
+        MachineName = "Distillery",
+        Desc = "Steam in, magic out. Like cooking, but with more science and less food.",
+        LongDesc = "By heating and carefully capturing the vapor, volatile essential substances are extracted. The distillery separates compounds precisely by boiling point — the purest method for delicate, gaseous, or heat-soluble substances.",
         Icon = "rbxassetid://0",
-        Cost = Config.Processing.Methods.Destillieren.Cost,
-        LevelReq = Config.Processing.Methods.Destillieren.LevelReq,
-        BaseDuration = Config.Processing.Methods.Destillieren.BaseDuration,
-        Category = "Fortgeschritten",
-        OutputType = "Destillat/Ätherisches Öl",
+        Cost = Config.Processing.Methods.Distilling.Cost,
+        LevelReq = Config.Processing.Methods.Distilling.LevelReq,
+        BaseDuration = Config.Processing.Methods.Distilling.BaseDuration,
+        Category = "Advanced",
+        OutputType = "Distillate/Essential Oil",
     },
 
-    AetherExtraktion = {
-        Id = "AetherExtraktion",
-        Name = "Äther-Extraktion",
-        MachineName = "Äther-Extraktor",
-        Desc = "Zieht die magische Essenz direkt aus der Pflanze. Sieht SO cool aus.",
-        LongDesc = "Der Äther-Extraktor nutzt konzentrierte magische Energie um nicht-physische Wirkstoffe aus Pflanzen zu lösen. Nur diese Methode kann Void-Energie, Sternenlicht oder Zeitessenz extrahieren. Die teuerste, aber auch mächtigste Methode.",
+    AetherExtraction = {
+        Id = "AetherExtraction",
+        Name = "Aether Extraction",
+        MachineName = "Aether Extractor",
+        Desc = "Pulls the magical essence straight out of the plant. Looks SO cool.",
+        LongDesc = "The Aether Extractor uses concentrated magical energy to dissolve non-physical compounds from plants. Only this method can extract void energy, starlight, or time essence. The most expensive, but also the most powerful method.",
         Icon = "rbxassetid://0",
-        Cost = Config.Processing.Methods.AetherExtraktion.Cost,
-        LevelReq = Config.Processing.Methods.AetherExtraktion.LevelReq,
-        BaseDuration = Config.Processing.Methods.AetherExtraktion.BaseDuration,
-        Category = "Meister",
-        OutputType = "Magische Essenz",
+        Cost = Config.Processing.Methods.AetherExtraction.Cost,
+        LevelReq = Config.Processing.Methods.AetherExtraction.LevelReq,
+        BaseDuration = Config.Processing.Methods.AetherExtraction.BaseDuration,
+        Category = "Master",
+        OutputType = "Magical Essence",
     },
 }
 
--- Reihenfolge der Methoden (für UI-Sortierung)
-ProcessingData.MethodOrder = { "Trocknen", "Moersern", "Pressen", "Destillieren", "AetherExtraktion" }
+-- Method order (for UI sorting)
+ProcessingData.MethodOrder = { "Drying", "Grinding", "Pressing", "Distilling", "AetherExtraction" }
 
 -- ============================================================
--- MASCHINEN-UPGRADES
+-- MACHINE UPGRADES
 -- ============================================================
 
 ProcessingData.Upgrades = {}
@@ -107,7 +107,7 @@ for i, level in ipairs(Config.Processing.UpgradeLevels) do
 end
 
 -- ============================================================
--- HILFSFUNKTIONEN
+-- HELPER FUNCTIONS
 -- ============================================================
 
 -- Get processing method data by ID
@@ -133,11 +133,11 @@ function ProcessingData.CalculatePotency(plantQuality, methodEfficiency, machine
     local upgrade = Config.Processing.UpgradeLevels[machineLevel or 1]
     local machineMult = upgrade and upgrade.PotencyMult or 1.0
 
-    -- Potenz = Pflanzenqualität × Methoden-Effizienz × Maschinen-Bonus
+    -- Potency = plant quality x method efficiency x machine bonus
     local potency = qualityMult * methodEfficiency * machineMult
 
-    -- Clamp 0-1 (normalisiert auf max = ★5 + Primär + Meister-Maschine)
-    local maxPotency = 3.0 * 1.0 * 1.3 -- ★5 × 100% × Meister
+    -- Clamp 0-1 (normalized to max = 5-star + primary + master machine)
+    local maxPotency = 3.0 * 1.0 * 1.3 -- 5-star x 100% x Master
     return math.min(potency / maxPotency, 1.0)
 end
 
@@ -147,7 +147,7 @@ function ProcessingData.GetYield(plantData, machineLevel, hasTrait)
     local upgrade = Config.Processing.UpgradeLevels[machineLevel or 1]
     local bonusYield = upgrade and upgrade.YieldBonus or 0
 
-    -- Trait "Gigantisch" = 2x yield
+    -- Trait "Gigantic" = 2x yield
     if hasTrait then
         baseYield = baseYield * 2
     end

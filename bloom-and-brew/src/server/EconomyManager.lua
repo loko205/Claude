@@ -1,6 +1,6 @@
 --[[
-    EconomyManager.lua — Währungs-Management, Shop, Level-Ups, Daily Rewards
-    Anti-Exploit: Alle Transaktionen server-validiert.
+    EconomyManager.lua — Currency Management, Shop, Level-Ups, Daily Rewards
+    Anti-Exploit: All transactions validated server-side.
 ]]
 
 local Players = game:GetService("Players")
@@ -48,49 +48,49 @@ local function rateCheck(player)
 end
 
 -- ============================================================
--- SHOP — SAMEN KAUFEN
+-- SHOP — BUY SEEDS
 -- ============================================================
 
 function EconomyManager.BuySeeds(player, plantId, amount)
     local data = DataManager.GetData(player)
-    if not data then return false, "Keine Daten" end
+    if not data then return false, "No data" end
 
     if type(amount) ~= "number" or amount <= 0 or amount > 99 then
-        return false, "Ungültige Menge"
+        return false, "Invalid amount"
     end
 
     local plant = PlantData.GetPlant(plantId)
-    if not plant then return false, "Unbekannte Pflanze" end
+    if not plant then return false, "Unknown plant" end
 
     -- Only Common and Uncommon seeds in shop
     local shopRarities = { Common = true, Uncommon = true }
     if not shopRarities[plant.Rarity] then
-        return false, "Diese Samen sind nicht im Shop erhältlich (nur durch Mutationen/Aufträge)"
+        return false, "These seeds are not available in the shop (only through mutations/orders)"
     end
 
     local totalCost = plant.SeedCost * amount
     if not DataManager.RemoveCoins(player, totalCost) then
-        return false, "Nicht genug Coins (" .. totalCost .. " benötigt)"
+        return false, "Not enough Coins (" .. totalCost .. " needed)"
     end
 
     data.Inventory.Seeds[plantId] = (data.Inventory.Seeds[plantId] or 0) + amount
 
-    return true, amount .. "x " .. plant.Name .. "-Samen gekauft (" .. totalCost .. " Coins)"
+    return true, amount .. "x " .. plant.Name .. " seeds purchased (" .. totalCost .. " Coins)"
 end
 
 -- ============================================================
--- VERKAUFEN (an NPCs, Basis-Preis)
+-- SELLING (to NPCs, base price)
 -- ============================================================
 
 function EconomyManager.SellPlant(player, plantIndex)
     local data = DataManager.GetData(player)
-    if not data then return false, "Keine Daten" end
+    if not data then return false, "No data" end
 
     local plant = data.Inventory.Plants[plantIndex]
-    if not plant then return false, "Pflanze nicht im Inventar" end
+    if not plant then return false, "Plant not in inventory" end
 
     local plantInfo = PlantData.GetPlant(plant.PlantId)
-    if not plantInfo then return false, "Unbekannte Pflanze" end
+    if not plantInfo then return false, "Unknown plant" end
 
     -- Calculate value
     local qualityMult = Config.Plants.QualityStars[plant.Quality]
@@ -120,15 +120,15 @@ function EconomyManager.SellPlant(player, plantIndex)
     DataManager.AddCoins(player, value)
     table.remove(data.Inventory.Plants, plantIndex)
 
-    return true, plantInfo.Name .. " verkauft für " .. value .. " Coins"
+    return true, plantInfo.Name .. " sold for " .. value .. " Coins"
 end
 
 function EconomyManager.SellPotion(player, potionIndex)
     local data = DataManager.GetData(player)
-    if not data then return false, "Keine Daten" end
+    if not data then return false, "No data" end
 
     local potion = data.Inventory.Potions[potionIndex]
-    if not potion then return false, "Trank nicht im Inventar" end
+    if not potion then return false, "Potion not in inventory" end
 
     local PotionData = require(ReplicatedStorage.Shared.PotionData)
     local value = PotionData.CalculateValue(potion.PotionId, potion.Purity, 3)
@@ -142,7 +142,7 @@ function EconomyManager.SellPotion(player, potionIndex)
     table.remove(data.Inventory.Potions, potionIndex)
 
     local potionInfo = PotionData.GetPotion(potion.PotionId)
-    return true, (potionInfo and potionInfo.Name or "Trank") .. " verkauft für " .. value .. " Coins"
+    return true, (potionInfo and potionInfo.Name or "Potion") .. " sold for " .. value .. " Coins"
 end
 
 -- ============================================================
@@ -151,7 +151,7 @@ end
 
 function EconomyManager.ClaimDailyLogin(player)
     local data = DataManager.GetData(player)
-    if not data then return false, "Keine Daten" end
+    if not data then return false, "No data" end
 
     local now = os.time()
     local lastLogin = data.LoginStreak.LastLogin or 0
@@ -161,7 +161,7 @@ function EconomyManager.ClaimDailyLogin(player)
     local today = math.floor(now / 86400)
 
     if lastDay == today then
-        return false, "Bereits heute eingeloggt!"
+        return false, "Already logged in today!"
     end
 
     -- Update streak
@@ -186,48 +186,48 @@ function EconomyManager.ClaimDailyLogin(player)
     DataManager.AddCoins(player, coins)
     DataManager.AddGems(player, gems)
 
-    return true, "Tag " .. data.LoginStreak.CurrentStreak .. "! +" .. coins .. " Coins, +" .. gems .. " Gems"
+    return true, "Day " .. data.LoginStreak.CurrentStreak .. "! +" .. coins .. " Coins, +" .. gems .. " Gems"
 end
 
 -- ============================================================
--- BODEN-UPGRADE
+-- SOIL UPGRADE
 -- ============================================================
 
 function EconomyManager.BuySoilUpgrade(player, plotIndex, soilType)
     local data = DataManager.GetData(player)
-    if not data then return false, "Keine Daten" end
+    if not data then return false, "No data" end
 
     local plot = data.Plots[plotIndex]
-    if not plot then return false, "Plot existiert nicht" end
+    if not plot then return false, "Plot does not exist" end
 
     if not Config.Garden.SoilTypes[soilType] then
-        return false, "Unbekannter Boden-Typ"
+        return false, "Unknown soil type"
     end
 
     if plot.SoilType == soilType then
-        return false, "Bereits dieser Boden-Typ"
+        return false, "Already using this soil type"
     end
 
     -- Soil costs
     local soilCosts = {
         Normal = 0,
-        Naehrboden = 500,
-        Mystisch = 1500,
+        Fertile = 500,
+        Mystical = 1500,
         Golden = 3000,
     }
 
     local cost = soilCosts[soilType] or 0
     if cost > 0 and not DataManager.RemoveCoins(player, cost) then
-        return false, "Nicht genug Coins (" .. cost .. " benötigt)"
+        return false, "Not enough Coins (" .. cost .. " needed)"
     end
 
     plot.SoilType = soilType
 
-    return true, "Boden auf " .. soilType .. " gewechselt!"
+    return true, "Soil changed to " .. soilType .. "!"
 end
 
 -- ============================================================
--- SHOP-DATEN FÜR CLIENT
+-- SHOP DATA FOR CLIENT
 -- ============================================================
 
 local function getShopData(player)

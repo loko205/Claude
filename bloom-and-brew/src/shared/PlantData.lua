@@ -1,13 +1,13 @@
 --[[
-    PlantData.lua — Alle Pflanzendefinitionen für Bloom & Brew
-    Jede Pflanze hat: Id, Name, Beschreibung, Rarität, Wachstumszeit,
-    Basiswert, mögliche Traits, und Verarbeitungsmethode(n).
+    PlantData.lua — All plant definitions for Bloom & Brew
+    Each plant has: Id, Name, Description, Rarity, GrowthTime,
+    BaseValue, possible Traits, and Processing method(s).
 ]]
 
 local PlantData = {}
 
 -- ============================================================
--- PFLANZENDEFINITIONEN
+-- PLANT DEFINITIONS
 -- ============================================================
 
 PlantData.Plants = {
@@ -16,338 +16,338 @@ PlantData.Plants = {
 
     mondkraut = {
         Id = "mondkraut",
-        Name = "Mondkraut",
-        Desc = "Leuchtet bei Vollmond so hell, dass Motten Schlange stehen. Riecht nach Mitternachtssnack.",
+        Name = "Moonwort",
+        Desc = "Glows so bright during a full moon that moths line up for it. Smells like a midnight snack.",
         Rarity = "Common",
         GrowthTime = 30,
         BaseValue = 10,
         SeedCost = 5,
-        TraitPool = { "Leuchtend", "Schnellwachsend", "Potent", "Duftend" },
-        -- Verarbeitung: Blätter trocknen lassen, Wirkung entfaltet sich an der Luft
+        TraitPool = { "Luminous", "FastGrowing", "Potent", "Fragrant" },
+        -- Processing: Let leaves dry, the effect unfolds in open air
         Processing = {
-            Primary = "Trocknen",
+            Primary = "Drying",
             Alternative = nil,
         },
-        ExtractName = "Getrocknetes Mondkraut",
-        ExtractDesc = "Silbrig schimmernde Blättchen, knistert leise im Mondlicht",
+        ExtractName = "Dried Moonwort",
+        ExtractDesc = "Silvery shimmering leaves that crackle softly in the moonlight",
     },
 
     flammenblatt = {
         Id = "flammenblatt",
-        Name = "Flammenblatt",
-        Desc = "Fasst sich warm an und würzt jede Suppe. Nicht empfohlen als Taschentuch.",
+        Name = "Flameleaf",
+        Desc = "Warm to the touch and spices up any soup. Not recommended as a handkerchief.",
         Rarity = "Common",
         GrowthTime = 60,
         BaseValue = 15,
         SeedCost = 8,
-        TraitPool = { "Leuchtend", "Gigantisch", "Potent", "Goldig" },
-        -- Verarbeitung: Feueröl sitzt im Blattinneren — pressen!
+        TraitPool = { "Luminous", "Giant", "Potent", "Golden" },
+        -- Processing: Fire oil sits inside the leaf — press it!
         Processing = {
-            Primary = "Pressen",
-            Alternative = { Method = "Moersern", Efficiency = 0.6 },
+            Primary = "Pressing",
+            Alternative = { Method = "Grinding", Efficiency = 0.6 },
         },
-        ExtractName = "Flammenöl",
-        ExtractDesc = "Orangerotes Öl das leicht flackert — Finger weg von offenen Flammen!",
+        ExtractName = "Flame Oil",
+        ExtractDesc = "Orange-red oil that flickers slightly — keep away from open flames!",
     },
 
     nebelranke = {
         Id = "nebelranke",
-        Name = "Nebelranke",
-        Desc = "Wächst am liebsten im Nebel und verschwindet manchmal einfach. Wie meine Socken.",
+        Name = "Mistcreeper",
+        Desc = "Loves growing in fog and sometimes just vanishes. Like my socks.",
         Rarity = "Common",
         GrowthTime = 90,
         BaseValue = 20,
         SeedCost = 12,
-        TraitPool = { "Schnellwachsend", "Selbstgiessend", "Potent", "Unsterblich" },
-        -- Verarbeitung: Flüchtige Nebelessenz muss durch Destillation aufgefangen werden
+        TraitPool = { "FastGrowing", "SelfWatering", "Potent", "Immortal" },
+        -- Processing: Volatile mist essence must be captured through distillation
         Processing = {
-            Primary = "Destillieren",
-            Alternative = { Method = "Trocknen", Efficiency = 0.5 },
+            Primary = "Distilling",
+            Alternative = { Method = "Drying", Efficiency = 0.5 },
         },
-        ExtractName = "Nebelessenz",
-        ExtractDesc = "Durchsichtiger Tropfen der im Glas zu schweben scheint",
+        ExtractName = "Mist Essence",
+        ExtractDesc = "A translucent drop that seems to hover inside its vial",
     },
 
     sternmoos = {
         Id = "sternmoos",
-        Name = "Sternmoos",
-        Desc = "Funkelt nachts wie ein Mini-Sternenhimmel. Schnecken lieben es — leider.",
+        Name = "Starmoss",
+        Desc = "Sparkles at night like a tiny starry sky. Slugs love it — unfortunately.",
         Rarity = "Common",
         GrowthTime = 120,
         BaseValue = 25,
         SeedCost = 15,
-        TraitPool = { "Leuchtend", "Gigantisch", "Schnellwachsend", "Duftend" },
-        -- Verarbeitung: Sporen im Moos müssen durch Mörsern freigesetzt werden
+        TraitPool = { "Luminous", "Giant", "FastGrowing", "Fragrant" },
+        -- Processing: Spores in the moss must be released by grinding
         Processing = {
-            Primary = "Moersern",
-            Alternative = { Method = "Trocknen", Efficiency = 0.7 },
+            Primary = "Grinding",
+            Alternative = { Method = "Drying", Efficiency = 0.7 },
         },
-        ExtractName = "Sternstaub-Pulver",
-        ExtractDesc = "Glitzerndes Pulver das an allem kleben bleibt. An. Allem.",
+        ExtractName = "Stardust Powder",
+        ExtractDesc = "Glittering powder that sticks to everything. Every. Thing.",
     },
 
     schattenlilie = {
         Id = "schattenlilie",
-        Name = "Schattenlilie",
-        Desc = "Blüht nur im Schatten und sieht dabei unfassbar dramatisch aus. Die Goth-Pflanze.",
+        Name = "Shadowlily",
+        Desc = "Only blooms in shadow and looks incredibly dramatic doing it. The goth plant.",
         Rarity = "Common",
         GrowthTime = 180,
         BaseValue = 30,
         SeedCost = 20,
-        TraitPool = { "Duftend", "Potent", "Goldig", "Unsterblich" },
-        -- Verarbeitung: Dunkler Nektar in den Blütenblättern — pressen
+        TraitPool = { "Fragrant", "Potent", "Golden", "Immortal" },
+        -- Processing: Dark nectar sits in the petals — press them
         Processing = {
-            Primary = "Pressen",
-            Alternative = { Method = "Destillieren", Efficiency = 0.8 },
+            Primary = "Pressing",
+            Alternative = { Method = "Distilling", Efficiency = 0.8 },
         },
-        ExtractName = "Schattennektar",
-        ExtractDesc = "Tintenschwarzer Sirup der das Licht um sich herum zu verschlucken scheint",
+        ExtractName = "Shadow Nectar",
+        ExtractDesc = "Ink-black syrup that seems to swallow the light around it",
     },
 
     -- ======== UNCOMMON (25%) ========
 
     kristallgras = {
         Id = "kristallgras",
-        Name = "Kristallgras",
-        Desc = "Knirscht beim Laufen wie Chips. Sieht aus wie gefrorener Rasen, ist aber warm.",
+        Name = "Crystalgrass",
+        Desc = "Crunches underfoot like chips. Looks like frozen lawn but it's warm.",
         Rarity = "Uncommon",
         GrowthTime = 150,
         BaseValue = 45,
         SeedCost = 30,
-        TraitPool = { "Leuchtend", "Gigantisch", "Goldig", "Potent" },
+        TraitPool = { "Luminous", "Giant", "Golden", "Potent" },
         Processing = {
-            Primary = "Moersern",
+            Primary = "Grinding",
             Alternative = nil,
         },
-        ExtractName = "Kristallsplitter",
-        ExtractDesc = "Winzige Kristalle die im Licht regenbogenfarben leuchten",
+        ExtractName = "Crystal Shards",
+        ExtractDesc = "Tiny crystals that glow in rainbow colors when hit by light",
     },
 
     sonnentau = {
         Id = "sonnentau",
-        Name = "Sonnentau",
-        Desc = "Klebriger als Honig, süßer als Komplimente. Insekten finden ihn unwiderstehlich.",
+        Name = "Sundew",
+        Desc = "Stickier than honey, sweeter than compliments. Bugs find it irresistible.",
         Rarity = "Uncommon",
         GrowthTime = 200,
         BaseValue = 50,
         SeedCost = 35,
-        TraitPool = { "Selbstgiessend", "Duftend", "Schnellwachsend", "Potent" },
+        TraitPool = { "SelfWatering", "Fragrant", "FastGrowing", "Potent" },
         Processing = {
-            Primary = "Pressen",
-            Alternative = { Method = "Trocknen", Efficiency = 0.6 },
+            Primary = "Pressing",
+            Alternative = { Method = "Drying", Efficiency = 0.6 },
         },
-        ExtractName = "Goldtau-Sirup",
-        ExtractDesc = "Zähflüssiger Sirup der im Sonnenlicht golden leuchtet",
+        ExtractName = "Goldew Syrup",
+        ExtractDesc = "Viscous syrup that glows golden in the sunlight",
     },
 
     windblume = {
         Id = "windblume",
-        Name = "Windblume",
-        Desc = "Weht auch ohne Wind. Ständig am Tanzen. Hat mehr Moves als du.",
+        Name = "Windbloom",
+        Desc = "Sways even without wind. Always dancing. Has more moves than you.",
         Rarity = "Uncommon",
         GrowthTime = 160,
         BaseValue = 40,
         SeedCost = 28,
-        TraitPool = { "Schnellwachsend", "Leuchtend", "Duftend", "Unsterblich" },
+        TraitPool = { "FastGrowing", "Luminous", "Fragrant", "Immortal" },
         Processing = {
-            Primary = "Destillieren",
-            Alternative = { Method = "Pressen", Efficiency = 0.65 },
+            Primary = "Distilling",
+            Alternative = { Method = "Pressing", Efficiency = 0.65 },
         },
-        ExtractName = "Windessenz",
-        ExtractDesc = "Eine Flasche die ständig vibriert — darin tobt ein Mini-Sturm",
+        ExtractName = "Wind Essence",
+        ExtractDesc = "A bottle that constantly vibrates — a tiny storm rages inside",
     },
 
     -- ======== RARE (10%) ========
 
     irrlichtwurzel = {
         Id = "irrlichtwurzel",
-        Name = "Irrlichtwurzel",
-        Desc = "Leuchtet grünlich und führt einen im Kreis. GPS-Signal: Fehlanzeige.",
+        Name = "Willowroot",
+        Desc = "Glows greenish and leads you in circles. GPS signal: not found.",
         Rarity = "Rare",
         GrowthTime = 240,
         BaseValue = 80,
         SeedCost = 60,
-        TraitPool = { "Leuchtend", "Potent", "Gigantisch", "Goldig" },
-        -- Verarbeitung: Ätherische Substanz nur durch Hitze lösbar
+        TraitPool = { "Luminous", "Potent", "Giant", "Golden" },
+        -- Processing: Ethereal substance only extractable through heat
         Processing = {
-            Primary = "Destillieren",
+            Primary = "Distilling",
             Alternative = nil,
         },
-        ExtractName = "Irrlicht-Destillat",
-        ExtractDesc = "Grünlich leuchtende Flüssigkeit die im Dunkeln den Weg weist... oder auch nicht",
+        ExtractName = "Willowlight Distillate",
+        ExtractDesc = "Greenish glowing liquid that guides your way in the dark... or maybe not",
     },
 
     donnerknospe = {
         Id = "donnerknospe",
-        Name = "Donnerknospe",
-        Desc = "Knallt beim Aufblühen wie ein Mini-Gewitter. Nachbarn hassen diesen Trick!",
+        Name = "Thunderbud",
+        Desc = "Pops like a mini thunderstorm when it blooms. Neighbors hate this one trick!",
         Rarity = "Rare",
         GrowthTime = 300,
         BaseValue = 100,
         SeedCost = 75,
-        TraitPool = { "Gigantisch", "Potent", "Leuchtend", "Schnellwachsend" },
-        -- Verarbeitung: Kristalline Struktur muss zerbrochen werden
+        TraitPool = { "Giant", "Potent", "Luminous", "FastGrowing" },
+        -- Processing: Crystalline structure must be shattered
         Processing = {
-            Primary = "Moersern",
-            Alternative = { Method = "Pressen", Efficiency = 0.6 },
+            Primary = "Grinding",
+            Alternative = { Method = "Pressing", Efficiency = 0.6 },
         },
-        ExtractName = "Blitzpulver",
-        ExtractDesc = "Knistert und knackt in der Dose. Nicht schütteln. NICHT. SCHÜTTELN.",
+        ExtractName = "Lightning Powder",
+        ExtractDesc = "Crackles and pops in the jar. Don't shake it. DO. NOT. SHAKE.",
     },
 
     frostbluete = {
         Id = "frostbluete",
-        Name = "Frostblüte",
-        Desc = "Eiskalt und wunderschön. Wie mein Ex. Aber nützlicher.",
+        Name = "Frostbloom",
+        Desc = "Ice cold and gorgeous. Like my ex. But more useful.",
         Rarity = "Rare",
         GrowthTime = 280,
         BaseValue = 90,
         SeedCost = 70,
-        TraitPool = { "Unsterblich", "Potent", "Duftend", "Goldig" },
-        -- Verarbeitung: Eisessenz schmilzt — schnell pressen!
+        TraitPool = { "Immortal", "Potent", "Fragrant", "Golden" },
+        -- Processing: Ice essence melts fast — press quickly!
         Processing = {
-            Primary = "Pressen",
+            Primary = "Pressing",
             Alternative = nil,
         },
-        ExtractName = "Frostessenz",
-        ExtractDesc = "Eisblaues Öl das nie gefriert aber alles um sich herum abkühlt",
+        ExtractName = "Frost Essence",
+        ExtractDesc = "Ice-blue oil that never freezes but chills everything around it",
     },
 
     -- ======== EPIC (4%) ========
 
     voidfarn = {
         Id = "voidfarn",
-        Name = "Voidfarn",
-        Desc = "Sieht aus wie ein Loch in der Realität. Fass nicht rein. Ernst gemeint.",
+        Name = "Voidfern",
+        Desc = "Looks like a hole in reality. Don't reach in. Seriously.",
         Rarity = "Epic",
         GrowthTime = 420,
         BaseValue = 200,
         SeedCost = 150,
-        TraitPool = { "Potent", "Leuchtend", "Gigantisch", "Unsterblich" },
-        -- Verarbeitung: Void-Energie nur magisch extrahierbar
+        TraitPool = { "Potent", "Luminous", "Giant", "Immortal" },
+        -- Processing: Void energy only extractable through magic
         Processing = {
-            Primary = "AetherExtraktion",
-            Alternative = { Method = "Destillieren", Efficiency = 0.4 },
+            Primary = "AetherExtraction",
+            Alternative = { Method = "Distilling", Efficiency = 0.4 },
         },
-        ExtractName = "Void-Extrakt",
-        ExtractDesc = "Ein Tropfen absoluter Schwärze. Verschluckt Licht und Neugier gleichermaßen",
+        ExtractName = "Void Extract",
+        ExtractDesc = "A drop of absolute darkness. Devours light and curiosity alike",
     },
 
     phoenixkelch = {
         Id = "phoenixkelch",
-        Name = "Phoenixkelch",
-        Desc = "Stirbt ab und wächst sofort neu. Hat mehr Comebacks als ein 90er-Boyband-Star.",
+        Name = "Phoenixcup",
+        Desc = "Dies and regrows instantly. Has more comebacks than a 90s boyband star.",
         Rarity = "Epic",
         GrowthTime = 480,
         BaseValue = 250,
         SeedCost = 180,
-        TraitPool = { "Unsterblich", "Potent", "Leuchtend", "Goldig" },
-        -- Verarbeitung: Phönixtränen verdampfen bei Berührung
+        TraitPool = { "Immortal", "Potent", "Luminous", "Golden" },
+        -- Processing: Phoenix tears evaporate on contact
         Processing = {
-            Primary = "Destillieren",
-            Alternative = { Method = "AetherExtraktion", Efficiency = 0.7 },
+            Primary = "Distilling",
+            Alternative = { Method = "AetherExtraction", Efficiency = 0.7 },
         },
-        ExtractName = "Phönixträne",
-        ExtractDesc = "Ein einzelner goldener Tropfen. Fühlt sich warm an wie eine Umarmung",
+        ExtractName = "Phoenix Tear",
+        ExtractDesc = "A single golden drop. Feels as warm as a hug",
     },
 
     sturmranke = {
         Id = "sturmranke",
-        Name = "Sturmranke",
-        Desc = "Peitscht wild herum und macht Krawall. Der Punk unter den Pflanzen.",
+        Name = "Stormvine",
+        Desc = "Whips around wildly and causes a ruckus. The punk of the plant world.",
         Rarity = "Epic",
         GrowthTime = 450,
         BaseValue = 220,
         SeedCost = 160,
-        TraitPool = { "Schnellwachsend", "Gigantisch", "Potent", "Duftend" },
-        -- Verarbeitung: Blitz-Saft in den Ranken
+        TraitPool = { "FastGrowing", "Giant", "Potent", "Fragrant" },
+        -- Processing: Lightning juice sits in the vines
         Processing = {
-            Primary = "Pressen",
-            Alternative = { Method = "Moersern", Efficiency = 0.5 },
+            Primary = "Pressing",
+            Alternative = { Method = "Grinding", Efficiency = 0.5 },
         },
-        ExtractName = "Sturmsaft",
-        ExtractDesc = "Elektrisch geladener Saft. Kribbelt auf der Zunge. Überall.",
+        ExtractName = "Storm Juice",
+        ExtractDesc = "Electrically charged juice. Tingles on your tongue. Everywhere.",
     },
 
     -- ======== LEGENDARY (0.9%) ========
 
     galaxienblume = {
         Id = "galaxienblume",
-        Name = "Galaxienblume",
-        Desc = "In ihren Blütenblättern sieht man winzige Sterne. Bester Screensaver der Natur.",
+        Name = "Galaxybloom",
+        Desc = "You can see tiny stars inside its petals. Nature's best screensaver.",
         Rarity = "Legendary",
         GrowthTime = 600,
         BaseValue = 500,
         SeedCost = 400,
-        TraitPool = { "Leuchtend", "Potent", "Goldig", "Unsterblich" },
-        -- Verarbeitung: Sternenlicht-Essenz ist nicht physisch
+        TraitPool = { "Luminous", "Potent", "Golden", "Immortal" },
+        -- Processing: Starlight essence is not physical
         Processing = {
-            Primary = "AetherExtraktion",
+            Primary = "AetherExtraction",
             Alternative = nil,
         },
-        ExtractName = "Sternenstaub-Essenz",
-        ExtractDesc = "Flüssiges Sternenlicht. Beleuchtet einen ganzen Raum wenn man das Fläschchen öffnet",
+        ExtractName = "Stardust Essence",
+        ExtractDesc = "Liquid starlight. Illuminates an entire room when you uncork the bottle",
     },
 
     zeitlotus = {
         Id = "zeitlotus",
-        Name = "Zeitlotus",
-        Desc = "Blüht gleichzeitig in Vergangenheit und Zukunft. Ganz normal. Alles fein.",
+        Name = "Timelotus",
+        Desc = "Blooms simultaneously in the past and the future. Totally normal. Everything's fine.",
         Rarity = "Legendary",
         GrowthTime = 720,
         BaseValue = 600,
         SeedCost = 500,
-        TraitPool = { "Potent", "Unsterblich", "Leuchtend", "Goldig" },
-        -- Verarbeitung: Zeitenergie braucht magischen Zugang
+        TraitPool = { "Potent", "Immortal", "Luminous", "Golden" },
+        -- Processing: Time energy requires magical access
         Processing = {
-            Primary = "AetherExtraktion",
-            Alternative = { Method = "Destillieren", Efficiency = 0.3 },
+            Primary = "AetherExtraction",
+            Alternative = { Method = "Distilling", Efficiency = 0.3 },
         },
-        ExtractName = "Zeitsand-Tinktur",
-        ExtractDesc = "Fließt rückwärts im Glas. Oder vorwärts? Kommt drauf an wann du hinschaust",
+        ExtractName = "Timesand Tincture",
+        ExtractDesc = "Flows backwards in the glass. Or forwards? Depends on when you look",
     },
 
     -- ======== MYTHIC (0.1%) ========
 
     weltbaumsetzling = {
         Id = "weltbaumsetzling",
-        Name = "Weltbaumsetzling",
-        Desc = "Ein Baby-Weltbaum! Wird mal das Universum tragen. Jetzt erstmal Topfpflanze.",
+        Name = "Worldtree Seedling",
+        Desc = "A baby world tree! Will carry the universe one day. For now, it's a houseplant.",
         Rarity = "Mythic",
         GrowthTime = 900,
         BaseValue = 1000,
         SeedCost = 800,
-        TraitPool = { "Gigantisch", "Unsterblich", "Potent", "Goldig", "Leuchtend" },
-        -- Verarbeitung: Urkraft nur mit höchster Technik extrahierbar
+        TraitPool = { "Giant", "Immortal", "Potent", "Golden", "Luminous" },
+        -- Processing: Primal energy only extractable with the highest technique
         Processing = {
-            Primary = "AetherExtraktion",
+            Primary = "AetherExtraction",
             Alternative = nil,
         },
-        ExtractName = "Weltenmark",
-        ExtractDesc = "Goldene Flüssigkeit die nach allem und nichts gleichzeitig riecht",
+        ExtractName = "Worldmarrow",
+        ExtractDesc = "Golden liquid that smells like everything and nothing at the same time",
     },
 
     ewige_essenz = {
         Id = "ewige_essenz",
-        Name = "Ewige Essenz",
-        Desc = "Existiert schon seit vor dem Urknall. Hat die beste Work-Life-Balance aller Pflanzen.",
+        Name = "Eternal Essence",
+        Desc = "Has existed since before the Big Bang. Best work-life balance of any plant.",
         Rarity = "Mythic",
         GrowthTime = 1200,
         BaseValue = 1500,
         SeedCost = 1200,
-        TraitPool = { "Potent", "Unsterblich", "Leuchtend", "Goldig", "Gigantisch", "Duftend" },
-        -- Verarbeitung: Reinste magische Substanz
+        TraitPool = { "Potent", "Immortal", "Luminous", "Golden", "Giant", "Fragrant" },
+        -- Processing: Purest magical substance
         Processing = {
-            Primary = "AetherExtraktion",
+            Primary = "AetherExtraction",
             Alternative = nil,
         },
-        ExtractName = "Ewigkeits-Tropfen",
-        ExtractDesc = "Ein Tropfen der nie verdunstet, nie gefriert, nie altert. Einfach... ewig",
+        ExtractName = "Eternity Drop",
+        ExtractDesc = "A drop that never evaporates, never freezes, never ages. Just... eternal",
     },
 }
 
 -- ============================================================
--- HILFSFUNKTIONEN
+-- HELPER FUNCTIONS
 -- ============================================================
 
 -- Returns plant data by ID

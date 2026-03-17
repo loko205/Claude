@@ -1,8 +1,8 @@
 --[[
-    BrewingEngine.lua — Trank-Brau-Logik, Reinheit, Effekt-Berechnung
-    Tränke werden aus EXTRAKTEN gebraut (nicht rohe Pflanzen!).
-    Reinheit = Extrakt-Potenz × Kessel-Level × Timing × Traits × Random.
-    Minigame-Scoring für bonus Reinheit.
+    BrewingEngine.lua — Potion Brewing Logic, Purity, Effect Calculation
+    Potions are brewed from EXTRACTS (not raw plants!).
+    Purity = Extract Potency x Cauldron Level x Timing x Traits x Random.
+    Minigame scoring for bonus purity.
 ]]
 
 local Players = game:GetService("Players")
@@ -33,7 +33,7 @@ local function createRemotes()
 end
 
 -- ============================================================
--- BRAU-LOGIK
+-- BREWING LOGIC
 -- ============================================================
 
 -- Start brewing a potion (with minigame option)
@@ -41,32 +41,32 @@ end
 -- extractSelection: table mapping extractId to amount (for wildcard recipes)
 function BrewingEngine.StartBrew(player, potionId, extractSelection)
     local data = DataManager.GetData(player)
-    if not data then return false, "Keine Daten" end
+    if not data then return false, "No data" end
 
     -- Level check
     if data.Level < Config.Brewing.UnlockLevel then
-        return false, "Brau-Labor ab Level " .. Config.Brewing.UnlockLevel
+        return false, "Brew Lab unlocks at Level " .. Config.Brewing.UnlockLevel
     end
 
     -- Already brewing?
     if data.Lab.ActiveBrew then
-        return false, "Es wird bereits gebraut!"
+        return false, "Already brewing!"
     end
 
     -- Validate potion exists
     local potion = PotionData.GetPotion(potionId)
-    if not potion then return false, "Unbekannter Trank" end
+    if not potion then return false, "Unknown potion" end
 
     -- Level requirement
     if data.Level < potion.LevelReq then
-        return false, "Level " .. potion.LevelReq .. " benötigt"
+        return false, "Level " .. potion.LevelReq .. " required"
     end
 
     -- Check cauldron slots
     local cauldronData = Config.Brewing.CauldronLevels[data.Lab.CauldronLevel]
     local ingredientCount = #potion.Ingredients
     if ingredientCount > cauldronData.Slots then
-        return false, "Kessel zu klein! " .. cauldronData.Name .. " hat nur " .. cauldronData.Slots .. " Slots"
+        return false, "Cauldron too small! " .. cauldronData.Name .. " only has " .. cauldronData.Slots .. " slots"
     end
 
     -- Validate and consume extracts
@@ -77,7 +77,7 @@ function BrewingEngine.StartBrew(player, potionId, extractSelection)
         if ingredient.ExtractFrom == "ANY_EPIC_PLUS" then
             -- Wildcard: player chooses which epic+ extracts to use
             if not extractSelection then
-                return false, "Wähle Epic+ Extrakte für den Chaostrank"
+                return false, "Select Epic+ extracts for the chaos potion"
             end
 
             local usedCount = 0
@@ -108,7 +108,7 @@ function BrewingEngine.StartBrew(player, potionId, extractSelection)
             end
 
             if usedCount < ingredient.Amount then
-                return false, "Nicht genug Epic+ Extrakte (brauche " .. ingredient.Amount .. ")"
+                return false, "Not enough Epic+ extracts (need " .. ingredient.Amount .. ")"
             end
         else
             -- Normal ingredient
@@ -116,7 +116,7 @@ function BrewingEngine.StartBrew(player, potionId, extractSelection)
             if not extract or extract.Amount < ingredient.Amount then
                 local plantInfo = PlantData.GetPlant(ingredient.ExtractFrom)
                 local name = plantInfo and plantInfo.ExtractName or ingredient.ExtractFrom
-                return false, "Nicht genug " .. name
+                return false, "Not enough " .. name
             end
 
             for i = 1, ingredient.Amount do
@@ -135,8 +135,8 @@ function BrewingEngine.StartBrew(player, potionId, extractSelection)
     -- Calculate brew time (with cauldron speed bonus)
     local brewTime = potion.BrewTime / cauldronData.SpeedMult
 
-    -- Braumeister gamepass bonus
-    if data.Gamepasses and data.Gamepasses.Braumeister then
+    -- BrewMaster gamepass bonus
+    if data.Gamepasses and data.Gamepasses.BrewMaster then
         -- Purity bonus applied later
     end
 
@@ -151,7 +151,7 @@ function BrewingEngine.StartBrew(player, potionId, extractSelection)
         AutoBrew = false,
     }
 
-    return true, potion.Name .. " wird gebraut! (" .. math.floor(brewTime) .. "s)"
+    return true, potion.Name .. " is brewing! (" .. math.floor(brewTime) .. "s)"
 end
 
 -- Auto-brew: skip minigame, base purity
@@ -163,7 +163,7 @@ function BrewingEngine.AutoBrew(player, potionId, extractSelection)
     data.Lab.ActiveBrew.AutoBrew = true
     data.Lab.ActiveBrew.MinigameScore = 0 -- No minigame bonus
 
-    return true, msg .. " (Auto-Modus)"
+    return true, msg .. " (Auto mode)"
 end
 
 -- ============================================================
@@ -174,20 +174,20 @@ end
 -- inputs: { timings = {}, temperature = {}, stirring = {} }
 function BrewingEngine.SubmitMinigame(player, inputs)
     local data = DataManager.GetData(player)
-    if not data or not data.Lab.ActiveBrew then return false, "Kein aktiver Brauvorgang" end
+    if not data or not data.Lab.ActiveBrew then return false, "No active brew" end
 
     if data.Lab.ActiveBrew.MinigameScore then
-        return false, "Minigame bereits abgeschlossen"
+        return false, "Minigame already completed"
     end
 
     -- Validate inputs aren't physically impossible (anti-cheat)
-    if type(inputs) ~= "table" then return false, "Ungültige Eingabe" end
+    if type(inputs) ~= "table" then return false, "Invalid input" end
 
     -- Anti-cheat: Check minimum brew time has passed before accepting minigame
     local brew = data.Lab.ActiveBrew
     local elapsed = os.time() - brew.StartTime
     if elapsed < 5 then
-        return false, "Brauvorgang gerade erst gestartet"
+        return false, "Brew just started"
     end
 
     local score = 0
@@ -228,22 +228,22 @@ function BrewingEngine.SubmitMinigame(player, inputs)
     data.Lab.ActiveBrew.MinigameScore = score
 
     local rating = "Okay"
-    if score >= 90 then rating = "PERFEKT!"
-    elseif score >= 70 then rating = "Sehr gut!"
-    elseif score >= 50 then rating = "Gut"
-    elseif score >= 30 then rating = "Naja..."
+    if score >= 90 then rating = "PERFECT!"
+    elseif score >= 70 then rating = "Great!"
+    elseif score >= 50 then rating = "Good"
+    elseif score >= 30 then rating = "Meh..."
     end
 
     return true, "Minigame: " .. score .. "/100 — " .. rating
 end
 
 -- ============================================================
--- TRANK ABHOLEN
+-- COLLECT POTION
 -- ============================================================
 
 function BrewingEngine.CollectPotion(player)
     local data = DataManager.GetData(player)
-    if not data or not data.Lab.ActiveBrew then return false, "Kein aktiver Brauvorgang" end
+    if not data or not data.Lab.ActiveBrew then return false, "No active brew" end
 
     local brew = data.Lab.ActiveBrew
 
@@ -251,7 +251,7 @@ function BrewingEngine.CollectPotion(player)
     local elapsed = os.time() - brew.StartTime
     if elapsed < brew.BrewTime then
         local remaining = math.ceil(brew.BrewTime - elapsed)
-        return false, "Noch " .. remaining .. "s übrig"
+        return false, remaining .. "s remaining"
     end
 
     -- If minigame wasn't completed and not auto-brew, use base score
@@ -259,8 +259,8 @@ function BrewingEngine.CollectPotion(player)
 
     -- Calculate purity
     local gamepassPurityBonus = 0
-    if data.Gamepasses and data.Gamepasses.Braumeister then
-        gamepassPurityBonus = Config.Economy.Gamepasses.Braumeister.PurityBonus
+    if data.Gamepasses and data.Gamepasses.BrewMaster then
+        gamepassPurityBonus = Config.Economy.Gamepasses.BrewMaster.PurityBonus
     end
 
     local purity = PotionData.CalculatePurity(
@@ -277,7 +277,7 @@ function BrewingEngine.CollectPotion(player)
     local purityTier = PotionData.GetPurityTier(purity)
     local potion = PotionData.GetPotion(brew.PotionId)
 
-    -- Handle Chaostrank (random effect)
+    -- Handle Chaos Potion (random effect)
     local actualPotionId = brew.PotionId
     if potion and potion.IsWildcard then
         -- Random potion effect
@@ -329,49 +329,49 @@ function BrewingEngine.CollectPotion(player)
 
     local resultPotion = PotionData.GetPotion(actualPotionId)
     local msg = (resultPotion and resultPotion.Name or actualPotionId) ..
-        " gebraut! Reinheit: " .. purity .. "% (" .. purityTier.Name .. ")"
+        " brewed! Purity: " .. purity .. "% (" .. purityTier.Name .. ")"
 
     if purityTier.Glow then
-        msg = msg .. " ★ LEUCHTET GOLDEN! ★"
+        msg = msg .. " ★ GLOWS GOLDEN! ★"
     end
 
     return true, msg, newPotion
 end
 
 -- ============================================================
--- KESSEL UPGRADE
+-- CAULDRON UPGRADE
 -- ============================================================
 
 function BrewingEngine.UpgradeCauldron(player)
     local data = DataManager.GetData(player)
-    if not data then return false, "Keine Daten" end
+    if not data then return false, "No data" end
 
     local currentLevel = data.Lab.CauldronLevel
     local nextLevel = currentLevel + 1
 
     if nextLevel > #Config.Brewing.CauldronLevels then
-        return false, "Maximales Kessel-Level erreicht"
+        return false, "Maximum cauldron level reached"
     end
 
     local nextCauldron = Config.Brewing.CauldronLevels[nextLevel]
 
     -- Level requirement
     if data.Level < nextCauldron.LevelReq then
-        return false, "Level " .. nextCauldron.LevelReq .. " benötigt"
+        return false, "Level " .. nextCauldron.LevelReq .. " required"
     end
 
     -- Cost
     if not DataManager.RemoveCoins(player, nextCauldron.Cost) then
-        return false, "Nicht genug Coins (" .. nextCauldron.Cost .. " benötigt)"
+        return false, "Not enough Coins (" .. nextCauldron.Cost .. " needed)"
     end
 
     data.Lab.CauldronLevel = nextLevel
 
-    return true, "Upgrade auf " .. nextCauldron.Name .. "! (+Slots, +Reinheit, +Speed)"
+    return true, "Upgraded to " .. nextCauldron.Name .. "! (+Slots, +Purity, +Speed)"
 end
 
 -- ============================================================
--- BRAU-TICK
+-- BREW TICK
 -- ============================================================
 
 local function brewTick()

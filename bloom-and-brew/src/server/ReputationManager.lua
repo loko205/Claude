@@ -1,9 +1,9 @@
 --[[
-    ReputationManager.lua — Zwei separate Ruf-Systeme:
-    1. NPC-Reputation: Steigt durch NPC-Aufträge, schaltet bessere Kunden frei
-    2. Dealer-Reputation: Steigt durch Spieler-Verkäufe, schaltet Ränge frei
+    ReputationManager.lua — Two separate reputation systems:
+    1. NPC Reputation: Increases through NPC orders, unlocks better customers
+    2. Dealer Reputation: Increases through player sales, unlocks ranks
 
-    Beide Systeme sind UNABHÄNGIG voneinander.
+    Both systems are INDEPENDENT of each other.
 ]]
 
 local Players = game:GetService("Players")
@@ -44,7 +44,7 @@ function ReputationManager.GetNPCRepInfo(player)
     local data = DataManager.GetData(player)
     if not data then return nil end
 
-    local currentType = "Dorfbewohner"
+    local currentType = "Villager"
     local nextType = nil
     local nextTypeRep = 0
 
@@ -71,7 +71,7 @@ function ReputationManager.GetNPCRepInfo(player)
 end
 
 -- ============================================================
--- 2. DEALER-REPUTATION (Spieler-Verkäufe)
+-- 2. DEALER REPUTATION (Player Sales)
 -- ============================================================
 
 -- Add dealer rep (called by PlayerTradeManager on sales)
@@ -125,14 +125,14 @@ function ReputationManager.GetDealerRepInfo(player)
         TotalSales = data.Trade.TotalSales,
         StandSlots = PlayerTradeData.GetStandSlots(
             data.Trade.DealerRep,
-            data.Gamepasses and data.Gamepasses.ErweiterterStand
+            data.Gamepasses and data.Gamepasses.ExpandedStand
         ),
         Progress = nextRank and ((data.Trade.DealerRep - currentRank.MinRep) / (nextRank.MinRep - currentRank.MinRep)) or 1.0,
     }
 end
 
 -- ============================================================
--- 3. GILDEN-REPUTATION (aggregiert aus Mitglieder-Rep)
+-- 3. GUILD REPUTATION (aggregated from member rep)
 -- ============================================================
 
 -- Calculate total guild reputation from all members

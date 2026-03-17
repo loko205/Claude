@@ -1,7 +1,7 @@
 --[[
-    ProcessingManager.lua — Verarbeitungs-System (NEU)
-    Pflanze → Verarbeitung (Trocknen/Mörsern/Pressen/Destillieren/Äther-Extraktion) → Extrakt
-    Server validiert alles: Maschinen-Besitz, Level, richtige Methode.
+    ProcessingManager.lua — Processing System
+    Plant -> Processing (Drying/Grinding/Pressing/Distilling/AetherExtraction) -> Extract
+    Server validates everything: machine ownership, level, correct method.
 ]]
 
 local Players = game:GetService("Players")
@@ -35,30 +35,30 @@ local function createRemotes()
 end
 
 -- ============================================================
--- MASCHINEN-VERWALTUNG
+-- MACHINE MANAGEMENT
 -- ============================================================
 
 -- Buy a processing machine
 function ProcessingManager.BuyMachine(player, methodId)
     local data = DataManager.GetData(player)
-    if not data then return false, "Keine Daten" end
+    if not data then return false, "No data" end
 
     local methodConfig = Config.Processing.Methods[methodId]
-    if not methodConfig then return false, "Unbekannte Methode" end
+    if not methodConfig then return false, "Unknown method" end
 
     -- Level check
     if data.Level < methodConfig.LevelReq then
-        return false, "Level " .. methodConfig.LevelReq .. " benötigt"
+        return false, "Level " .. methodConfig.LevelReq .. " required"
     end
 
     -- Already owned?
     if data.Processing.Machines[methodId] and data.Processing.Machines[methodId].Owned then
-        return false, "Bereits vorhanden"
+        return false, "Already owned"
     end
 
     -- Cost check
     if not DataManager.RemoveCoins(player, methodConfig.Cost) then
-        return false, "Nicht genug Coins (" .. methodConfig.Cost .. " benötigt)"
+        return false, "Not enough Coins (" .. methodConfig.Cost .. " needed)"
     end
 
     data.Processing.Machines[methodId] = {
@@ -66,38 +66,38 @@ function ProcessingManager.BuyMachine(player, methodId)
         Level = 1,
     }
 
-    return true, methodConfig.MachineName .. " gekauft!"
+    return true, methodConfig.MachineName .. " purchased!"
 end
 
--- Upgrade a machine (Level 1→2→3)
+-- Upgrade a machine (Level 1->2->3)
 function ProcessingManager.UpgradeMachine(player, methodId)
     local data = DataManager.GetData(player)
-    if not data then return false, "Keine Daten" end
+    if not data then return false, "No data" end
 
     local machine = data.Processing.Machines[methodId]
     if not machine or not machine.Owned then
-        return false, "Maschine nicht vorhanden"
+        return false, "Machine not owned"
     end
 
     if machine.Level >= #Config.Processing.UpgradeLevels then
-        return false, "Bereits maximales Level"
+        return false, "Already at maximum level"
     end
 
     local targetLevel = machine.Level + 1
     local cost = ProcessingData.GetUpgradeCost(methodId, targetLevel)
 
     if not DataManager.RemoveCoins(player, cost) then
-        return false, "Nicht genug Coins (" .. cost .. " benötigt)"
+        return false, "Not enough Coins (" .. cost .. " needed)"
     end
 
     machine.Level = targetLevel
     local upgradeName = Config.Processing.UpgradeLevels[targetLevel].Name
 
-    return true, "Upgrade auf " .. upgradeName .. "!"
+    return true, "Upgraded to " .. upgradeName .. "!"
 end
 
 -- ============================================================
--- VERARBEITUNG STARTEN
+-- START PROCESSING
 -- ============================================================
 
 -- Start processing a plant into an extract
@@ -105,31 +105,31 @@ end
 -- methodId: Which processing method to use
 function ProcessingManager.StartProcessing(player, plantInventoryIndex, methodId)
     local data = DataManager.GetData(player)
-    if not data then return false, "Keine Daten" end
+    if not data then return false, "No data" end
 
     -- Check active processing slots
     local activeCount = #data.Processing.ActiveProcessing
     if activeCount >= MAX_PROCESSING_SLOTS then
-        return false, "Alle Verarbeitungs-Slots belegt (" .. MAX_PROCESSING_SLOTS .. " max)"
+        return false, "All processing slots occupied (" .. MAX_PROCESSING_SLOTS .. " max)"
     end
 
     -- Validate plant exists in inventory
     local plant = data.Inventory.Plants[plantInventoryIndex]
-    if not plant then return false, "Pflanze nicht im Inventar" end
+    if not plant then return false, "Plant not in inventory" end
 
     local plantInfo = PlantData.GetPlant(plant.PlantId)
-    if not plantInfo then return false, "Unbekannte Pflanze" end
+    if not plantInfo then return false, "Unknown plant" end
 
     -- Validate machine owned
     local machine = data.Processing.Machines[methodId]
     if not machine or not machine.Owned then
-        return false, "Maschine nicht vorhanden — kaufe zuerst ein " ..
-            (Config.Processing.Methods[methodId] and Config.Processing.Methods[methodId].MachineName or "Gerät")
+        return false, "Machine not owned — buy a " ..
+            (Config.Processing.Methods[methodId] and Config.Processing.Methods[methodId].MachineName or "device") .. " first"
     end
 
     -- Validate player level for method
     if not ProcessingData.CanPlayerUse(methodId, data.Level) then
-        return false, "Level zu niedrig für diese Methode"
+        return false, "Level too low for this method"
     end
 
     -- Validate plant can be processed with this method
@@ -138,9 +138,9 @@ function ProcessingManager.StartProcessing(player, plantInventoryIndex, methodId
         if Config.Processing.WrongMethodDestroysPlant then
             -- Wrong method: plant is destroyed!
             table.remove(data.Inventory.Plants, plantInventoryIndex)
-            return false, "FALSCHE METHODE! " .. plantInfo.Name .. " wurde zerstört!"
+            return false, "WRONG METHOD! " .. plantInfo.Name .. " was destroyed!"
         end
-        return false, "Diese Methode funktioniert nicht für " .. plantInfo.Name
+        return false, "This method does not work for " .. plantInfo.Name
     end
 
     -- Calculate duration
@@ -161,30 +161,30 @@ function ProcessingManager.StartProcessing(player, plantInventoryIndex, methodId
     })
 
     local methodName = ProcessingData.GetMethod(methodId).Name
-    return true, plantInfo.Name .. " wird verarbeitet (" .. methodName .. ", " .. math.floor(duration) .. "s)"
+    return true, plantInfo.Name .. " is being processed (" .. methodName .. ", " .. math.floor(duration) .. "s)"
 end
 
 -- ============================================================
--- EXTRAKT ABHOLEN
+-- COLLECT EXTRACT
 -- ============================================================
 
 -- Collect a finished extract
 function ProcessingManager.CollectExtract(player, processingIndex)
     local data = DataManager.GetData(player)
-    if not data then return false, "Keine Daten" end
+    if not data then return false, "No data" end
 
     local processing = data.Processing.ActiveProcessing[processingIndex]
-    if not processing then return false, "Keine Verarbeitung an diesem Slot" end
+    if not processing then return false, "No processing in this slot" end
 
     -- Check if done
     local elapsed = os.time() - processing.StartTime
     if elapsed < processing.Duration then
         local remaining = math.ceil(processing.Duration - elapsed)
-        return false, "Noch " .. remaining .. "s übrig"
+        return false, remaining .. "s remaining"
     end
 
     local plantInfo = PlantData.GetPlant(processing.PlantId)
-    if not plantInfo then return false, "Unbekannte Pflanze" end
+    if not plantInfo then return false, "Unknown plant" end
 
     -- Calculate potency
     local potency = ProcessingData.CalculatePotency(
@@ -194,16 +194,16 @@ function ProcessingManager.CollectExtract(player, processingIndex)
     )
 
     -- Calculate yield
-    local hasGigantisch = false
+    local hasGiant = false
     if processing.PlantTraits then
         for _, trait in ipairs(processing.PlantTraits) do
-            if trait == "Gigantisch" then
-                hasGigantisch = true
+            if trait == "Giant" then
+                hasGiant = true
                 break
             end
         end
     end
-    local yield = ProcessingData.GetYield(plantInfo, processing.MachineLevel, hasGigantisch)
+    local yield = ProcessingData.GetYield(plantInfo, processing.MachineLevel, hasGiant)
 
     -- Add extract to inventory
     local extractKey = processing.PlantId
@@ -234,7 +234,7 @@ function ProcessingManager.CollectExtract(player, processingIndex)
     data.Stats.TotalExtracts = (data.Stats.TotalExtracts or 0) + yield
     DataManager.AddXP(player, Config.Economy.XP.Processing)
 
-    return true, plantInfo.ExtractName .. " gewonnen! (Potenz: " .. math.floor(potency * 100) .. "%, Menge: " .. yield .. ")"
+    return true, plantInfo.ExtractName .. " obtained! (Potency: " .. math.floor(potency * 100) .. "%, Amount: " .. yield .. ")"
 end
 
 -- ============================================================

@@ -1,58 +1,58 @@
 # Bloom & Brew 🌿⚗️
 
-Ein Roblox-Spiel das Gärtnern, Alchemie und Spieler-Handel kombiniert.
+A Roblox game combining gardening, alchemy, and player trading.
 
 ## Elevator Pitch
 
-Du bist ein Alchemist-Gärtner: Züchte magische Pflanzen, verarbeite ihre Wirkstoffe mit verschiedenen Maschinen, braue daraus Zaubertränke mit verrückten Effekten, und verkaufe sie über ein wachsendes Netzwerk aus NPCs UND echten Spielern.
+You are an alchemist-gardener: Grow magical plants, process their active ingredients with various machines, brew potions with wild effects, and sell them through a growing network of NPCs AND real players.
 
 ## Core Loop
 
 ```
-Samen → Pflanzen & Pflegen → Ernten
-    → Verarbeiten (Trocknen/Mörsern/Pressen/Destillieren/Äther-Extraktion)
-    → Extrakte gewinnen → Tränke brauen → Reinheit bestimmen
-    → Verkaufen an NPCs ODER Handeln mit Spielern
-    → Geld, Samen, Reputation, seltene Rezepte
+Seeds → Plant & Tend → Harvest
+    → Process (Drying/Grinding/Pressing/Distilling/Aether Extraction)
+    → Obtain Extracts → Brew Potions → Determine Purity
+    → Sell to NPCs OR Trade with Players
+    → Coins, Seeds, Reputation, Rare Recipes
 ```
 
-## Projektstruktur
+## Project Structure
 
 ```
 bloom-and-brew/
 ├── docs/                    # Game Design Document
 ├── src/
-│   ├── shared/              # ReplicatedStorage — Daten & Config
-│   ├── server/              # ServerScriptService — Spiellogik
-│   ├── client/              # StarterPlayerScripts — UI-Stubs
-│   └── data/                # Balancing-Dokumentation
-├── default.project.json     # Rojo-Config
+│   ├── shared/              # ReplicatedStorage — Data & Config
+│   ├── server/              # ServerScriptService — Game Logic
+│   ├── client/              # StarterPlayerScripts — UI Stubs
+│   └── data/                # Balancing Documentation
+├── default.project.json     # Rojo Config
 └── README.md
 ```
 
 ## Setup
 
-1. [Rojo](https://rojo.space/) installieren (VS Code Extension + Roblox Plugin)
-2. `rojo serve` im Projektverzeichnis starten
+1. Install [Rojo](https://rojo.space/) (VS Code Extension + Roblox Plugin)
+2. Run `rojo serve` in the project directory
 3. In Roblox Studio: Rojo Plugin → Connect
 
 ## Tech Stack
 
-- **Sprache:** Luau (Roblox Lua)
+- **Language:** Luau (Roblox Lua)
 - **Sync:** Rojo
-- **Architektur:** Strikte Server-Client-Trennung — alle Spiellogik serverseitig
+- **Architecture:** Strict server-client separation — all game logic runs server-side
 
 ## Features
 
-- **Garten-System:** 6 Plots, 4 Boden-Typen, 20+ Pflanzen mit Raritäten & Traits
-- **Verarbeitungs-System:** 5 Methoden (Trocknen → Äther-Extraktion), jede Pflanze braucht die richtige Maschine
-- **Brau-System:** 14+ Tränke, Reinheitssystem (0-100%), optionales Brau-Minigame
-- **Mutations-System:** Pflanzen kreuzen für seltene Varianten
-- **NPC-Kunden:** 5 Typen mit eigener Persönlichkeit und Anforderungen
-- **Spieler-Handel:** Direkthandel, Schwarzes Brett, Auktionshaus, Trankstand
-- **Gilden:** Gemeinsamer Garten, Gruppen-Brauen, Gilden-Aufträge
-- **Trank-Duell:** Fun-PvP mit Trank-Effekten
+- **Garden System:** 6 plots, 4 soil types, 20+ plants with rarities & traits
+- **Processing System:** 5 methods (Drying → Aether Extraction), each plant requires the right machine
+- **Brewing System:** 14+ potions, purity system (0-100%), optional brewing minigame
+- **Mutation System:** Cross-breed plants for rare variants
+- **NPC Customers:** 5 types with unique personalities and requirements
+- **Player Trading:** Direct trade, Bulletin Board, Auction House, Potion Stand
+- **Guilds:** Shared garden, group brewing, guild quests
+- **Potion Duel:** Fun PvP with potion effects
 
-## Lizenz
+## License
 
 MIT

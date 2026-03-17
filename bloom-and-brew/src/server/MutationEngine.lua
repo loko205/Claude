@@ -1,7 +1,7 @@
 --[[
-    MutationEngine.lua — Server-seitige Mutationsberechnung
-    Mutationslabor ab Level 5: 2 Pflanzen + optionaler Katalysator → Ergebnis
-    Trait-Vererbung, Erfolgswahrscheinlichkeit, Fallback bei Fehlschlag.
+    MutationEngine.lua — Server-side mutation calculation
+    Mutation Lab at Level 5: 2 plants + optional catalyst → result
+    Trait inheritance, success probability, fallback on failure.
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -39,27 +39,27 @@ end
 -- catalystId: optional catalyst from inventory
 function MutationEngine.AttemptMutation(player, plantIndex1, plantIndex2, catalystId)
     local data = DataManager.GetData(player)
-    if not data then return false, "Keine Daten" end
+    if not data then return false, "No data" end
 
     -- Level check
     if data.Level < Config.Mutation.UnlockLevel then
-        return false, "Mutationslabor ab Level " .. Config.Mutation.UnlockLevel
+        return false, "Mutation Lab unlocks at Level " .. Config.Mutation.UnlockLevel
     end
 
     -- Validate plants exist
     local plant1 = data.Inventory.Plants[plantIndex1]
     local plant2 = data.Inventory.Plants[plantIndex2]
-    if not plant1 or not plant2 then return false, "Pflanzen nicht im Inventar" end
-    if plantIndex1 == plantIndex2 then return false, "Zwei verschiedene Pflanzen benötigt" end
+    if not plant1 or not plant2 then return false, "Plants not in inventory" end
+    if plantIndex1 == plantIndex2 then return false, "Two different plants required" end
 
     -- Validate catalyst if provided
     if catalystId then
         local catalystAmount = data.Inventory.Catalysts[catalystId]
         if not catalystAmount or catalystAmount <= 0 then
-            return false, "Katalysator nicht vorhanden"
+            return false, "Catalyst not available"
         end
         if not MutationRecipes.Catalysts[catalystId] then
-            return false, "Unbekannter Katalysator"
+            return false, "Unknown catalyst"
         end
     end
 
@@ -69,14 +69,14 @@ function MutationEngine.AttemptMutation(player, plantIndex1, plantIndex2, cataly
     -- Check if recipe requires specific catalyst
     if recipe and recipe.RequiresCatalyst then
         if catalystId ~= recipe.RequiresCatalyst then
-            return false, "Diese Mutation braucht " ..
-                MutationRecipes.Catalysts[recipe.RequiresCatalyst].Name .. " als Katalysator!"
+            return false, "This mutation requires " ..
+                MutationRecipes.Catalysts[recipe.RequiresCatalyst].Name .. " as catalyst!"
         end
     end
 
     -- Experimental Serum: random result regardless of recipe
     local useRandom = false
-    if catalystId == "ExperimentellesSerum" then
+    if catalystId == "ExperimentalSerum" then
         useRandom = true
     end
 
@@ -114,7 +114,7 @@ function MutationEngine.AttemptMutation(player, plantIndex1, plantIndex2, cataly
         end
     end
 
-    -- Random result (Experimentelles Serum)
+    -- Random result (Experimental Serum)
     if useRandom then
         local allPlantIds = PlantData.GetAllPlantIds()
         local randomPlantId = allPlantIds[math.random(1, #allPlantIds)]
@@ -141,7 +141,7 @@ function MutationEngine.AttemptMutation(player, plantIndex1, plantIndex2, cataly
         data.Stats.MutationsDiscovered = data.Stats.MutationsDiscovered + 1
         DataManager.AddXP(player, Config.Economy.XP.Mutation)
 
-        return true, "Experimentelle Mutation! Ergebnis: " .. randomPlant.Name .. " (Zufall!)"
+        return true, "Experimental mutation! Result: " .. randomPlant.Name .. " (Random!)"
     end
 
     -- No recipe found
@@ -156,7 +156,7 @@ function MutationEngine.AttemptMutation(player, plantIndex1, plantIndex2, cataly
             MutatedAt = os.time(),
         })
 
-        return false, "Keine bekannte Kombination! Fallback: " .. (fallbackPlant and fallbackPlant.Name or fallbackId)
+        return false, "No known combination! Fallback: " .. (fallbackPlant and fallbackPlant.Name or fallbackId)
     end
 
     -- Calculate success chance
@@ -174,13 +174,13 @@ function MutationEngine.AttemptMutation(player, plantIndex1, plantIndex2, cataly
         -- Quality: average of inputs, with catalyst bonus
         local resultQuality = math.floor((plant1.Quality + plant2.Quality) / 2)
 
-        -- Catalyst: Sonnenkristall boosts quality
-        if catalystId == "Sonnenkristall" then
-            resultQuality = math.min(5, resultQuality + MutationRecipes.Catalysts.Sonnenkristall.Value)
+        -- Catalyst: Suncrystal boosts quality
+        if catalystId == "Suncrystal" then
+            resultQuality = math.min(5, resultQuality + MutationRecipes.Catalysts.Suncrystal.Value)
         end
-        -- Catalyst: Wurmkompost min quality
-        if catalystId == "Wurmkompost" then
-            resultQuality = math.max(resultQuality, MutationRecipes.Catalysts.Wurmkompost.Value)
+        -- Catalyst: WormCompost min quality
+        if catalystId == "WormCompost" then
+            resultQuality = math.max(resultQuality, MutationRecipes.Catalysts.WormCompost.Value)
         end
 
         -- Trait inheritance + new trait chance
@@ -224,12 +224,12 @@ function MutationEngine.AttemptMutation(player, plantIndex1, plantIndex2, cataly
         end
         DataManager.AddXP(player, xpAmount)
 
-        local msg = "Mutation erfolgreich! " .. resultPlant.Name
+        local msg = "Mutation successful! " .. resultPlant.Name
         if #resultTraits > 0 then
             msg = msg .. " [Traits: " .. table.concat(resultTraits, ", ") .. "]"
         end
         if isNewDiscovery then
-            msg = msg .. " ★ NEUE ENTDECKUNG! ★"
+            msg = msg .. " ★ NEW DISCOVERY! ★"
         end
 
         return true, msg
@@ -248,7 +248,7 @@ function MutationEngine.AttemptMutation(player, plantIndex1, plantIndex2, cataly
         })
 
         local chancePercent = math.floor(chance * 100)
-        return false, "Mutation fehlgeschlagen (" .. chancePercent .. "% Chance). Fallback: " ..
+        return false, "Mutation failed (" .. chancePercent .. "% chance). Fallback: " ..
             (fallbackPlant and fallbackPlant.Name or fallbackId)
     end
 end

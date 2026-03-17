@@ -1,6 +1,6 @@
 --[[
-    MutationRecipes.lua — Pflanzen-Mutations-Rezepte & Katalysatoren
-    Mutations-Labor ab Level 5: 2 Pflanzen + optionaler Katalysator → Ergebnis
+    MutationRecipes.lua — Plant mutation recipes & catalysts
+    Mutation Lab unlocked at Level 5: 2 plants + optional catalyst → result
 ]]
 
 local Config = require(script.Parent.Config)
@@ -8,8 +8,8 @@ local Config = require(script.Parent.Config)
 local MutationRecipes = {}
 
 -- ============================================================
--- MUTATIONS-REZEPTE
--- Format: { Input1, Input2 } → Result (mit Erfolgsrate)
+-- MUTATION RECIPES
+-- Format: { Input1, Input2 } → Result (with success rate)
 -- ============================================================
 
 MutationRecipes.Recipes = {
@@ -19,31 +19,31 @@ MutationRecipes.Recipes = {
         Inputs = { "mondkraut", "flammenblatt" },
         Result = "irrlichtwurzel",
         BaseChance = 0.30,
-        Desc = "Mondlicht + Feuer = ein irres Leuchten das niemals erlischt",
+        Desc = "Moonlight + Fire = a wild glow that never fades",
     },
     {
         Inputs = { "nebelranke", "sternmoos" },
         Result = "frostbluete",
         BaseChance = 0.25,
-        Desc = "Nebel + Sternenkälte = ewiges Eis in Blütenform",
+        Desc = "Mist + stellar cold = eternal ice in blossom form",
     },
     {
         Inputs = { "flammenblatt", "sternmoos" },
         Result = "donnerknospe",
         BaseChance = 0.30,
-        Desc = "Feuer + Sternenenergie = purer Blitz in einer Knospe",
+        Desc = "Fire + star energy = pure lightning in a bud",
     },
     {
         Inputs = { "mondkraut", "nebelranke" },
         Result = "frostbluete",
         BaseChance = 0.28,
-        Desc = "Mondkälte + Nebel = kristallklares Eis",
+        Desc = "Moon chill + mist = crystal-clear ice",
     },
     {
         Inputs = { "schattenlilie", "mondkraut" },
         Result = "irrlichtwurzel",
         BaseChance = 0.35,
-        Desc = "Schatten + Mond = ein Licht das in die Irre führt",
+        Desc = "Shadow + moon = a light that leads you astray",
     },
 
     -- ======== COMMON → UNCOMMON ========
@@ -51,19 +51,19 @@ MutationRecipes.Recipes = {
         Inputs = { "mondkraut", "sternmoos" },
         Result = "kristallgras",
         BaseChance = 0.40,
-        Desc = "Mondlicht kristallisiert die Sternsporen",
+        Desc = "Moonlight crystallizes the star spores",
     },
     {
         Inputs = { "flammenblatt", "schattenlilie" },
         Result = "sonnentau",
         BaseChance = 0.38,
-        Desc = "Feuer + Schatten = goldener Sonnentropfen",
+        Desc = "Fire + shadow = golden sundrop",
     },
     {
         Inputs = { "nebelranke", "flammenblatt" },
         Result = "windblume",
         BaseChance = 0.35,
-        Desc = "Nebel + Hitze = ein ewiger Wind in Blütenform",
+        Desc = "Mist + heat = an eternal breeze in blossom form",
     },
 
     -- ======== RARE → EPIC ========
@@ -71,19 +71,19 @@ MutationRecipes.Recipes = {
         Inputs = { "irrlichtwurzel", "frostbluete" },
         Result = "voidfarn",
         BaseChance = 0.22,
-        Desc = "Irrlicht + Frost = ein Riss in der Realität",
+        Desc = "Wisp + frost = a crack in reality",
     },
     {
         Inputs = { "donnerknospe", "irrlichtwurzel" },
         Result = "sturmranke",
         BaseChance = 0.20,
-        Desc = "Donner + Irrlicht = ein elektrischer Sturm",
+        Desc = "Thunder + wisp = an electric storm",
     },
     {
         Inputs = { "frostbluete", "donnerknospe" },
         Result = "phoenixkelch",
         BaseChance = 0.22,
-        Desc = "Eis + Blitz = aus der Zerstörung wächst Neues",
+        Desc = "Ice + lightning = from destruction, new life grows",
     },
 
     -- ======== EPIC → LEGENDARY ========
@@ -91,83 +91,83 @@ MutationRecipes.Recipes = {
         Inputs = { "voidfarn", "phoenixkelch" },
         Result = "galaxienblume",
         BaseChance = 0.14,
-        Desc = "Void + Phönix = ein neuer Stern wird geboren",
+        Desc = "Void + phoenix = a new star is born",
     },
     {
         Inputs = { "sturmranke", "voidfarn" },
         Result = "zeitlotus",
         BaseChance = 0.12,
-        Desc = "Sturm + Void = die Zeit selbst verbiegt sich",
+        Desc = "Storm + void = time itself bends",
     },
     {
         Inputs = { "phoenixkelch", "sturmranke" },
         Result = "galaxienblume",
         BaseChance = 0.13,
-        Desc = "Phönix + Sturm = kosmische Wiedergeburt",
+        Desc = "Phoenix + storm = cosmic rebirth",
     },
 
-    -- ======== LEGENDARY → MYTHIC (braucht Regenbogen-Essenz als Katalysator!) ========
+    -- ======== LEGENDARY → MYTHIC (requires Rainbow Essence as catalyst!) ========
     {
         Inputs = { "galaxienblume", "zeitlotus" },
         Result = "weltbaumsetzling",
         BaseChance = 0.04,
-        RequiresCatalyst = "RegenbogenEssenz",
-        Desc = "Galaxie + Zeit = der Samen des Universums",
+        RequiresCatalyst = "RainbowEssence",
+        Desc = "Galaxy + time = the seed of the universe",
     },
     {
         Inputs = { "zeitlotus", "galaxienblume" },
         Result = "ewige_essenz",
         BaseChance = 0.03,
-        RequiresCatalyst = "RegenbogenEssenz",
-        Desc = "Zeit + Sterne = etwas das schon immer da war",
+        RequiresCatalyst = "RainbowEssence",
+        Desc = "Time + stars = something that always was",
     },
 }
 
 -- ============================================================
--- KATALYSATOREN
+-- CATALYSTS
 -- ============================================================
 
 MutationRecipes.Catalysts = {
-    Mondstein = {
-        Id = "Mondstein",
-        Name = "Mondstein",
-        Desc = "Ein silbriger Stein der das Mondlicht speichert. Erhöht die Chance auf seltenere Ergebnisse.",
+    Moonstone = {
+        Id = "Moonstone",
+        Name = "Moonstone",
+        Desc = "A silvery stone that stores moonlight. Increases the chance of rarer results.",
         Effect = "RarityBoost",
-        Value = 0.10, -- +10% Erfolgsrate
+        Value = 0.10, -- +10% success rate
         Cost = 200,
         Rarity = "Uncommon",
     },
-    Sonnenkristall = {
-        Id = "Sonnenkristall",
-        Name = "Sonnenkristall",
-        Desc = "Goldener Kristall voller Sonnenenergie. Das Ergebnis wird mindestens ★★★.",
+    Suncrystal = {
+        Id = "Suncrystal",
+        Name = "Sun Crystal",
+        Desc = "A golden crystal brimming with solar energy. The result will be at least 3-star.",
         Effect = "QualityBoost",
-        Value = 1, -- +1 Qualitätsstufe
+        Value = 1, -- +1 quality tier
         Cost = 350,
         Rarity = "Rare",
     },
-    RegenbogenEssenz = {
-        Id = "RegenbogenEssenz",
-        Name = "Regenbogen-Essenz",
-        Desc = "Schillert in allen Farben. Einziger Weg zu Mythic-Pflanzen. Extrem selten!",
+    RainbowEssence = {
+        Id = "RainbowEssence",
+        Name = "Rainbow Essence",
+        Desc = "Shimmers in every color. The only way to get Mythic plants. Extremely rare!",
         Effect = "MythicUnlock",
         Value = true,
         Cost = 2000,
         Rarity = "Legendary",
     },
-    Wurmkompost = {
-        Id = "Wurmkompost",
-        Name = "Wurmkompost",
-        Desc = "Von den fleißigsten Würmern der Welt. Garantiert mindestens ★★★ Qualität.",
+    WormCompost = {
+        Id = "WormCompost",
+        Name = "Worm Compost",
+        Desc = "Made by the world's most diligent worms. Guarantees at least 3-star quality.",
         Effect = "MinQuality",
-        Value = 3, -- Min ★★★
+        Value = 3, -- Min 3-star
         Cost = 150,
         Rarity = "Common",
     },
-    ExperimentellesSerum = {
-        Id = "ExperimentellesSerum",
-        Name = "Experimentelles Serum",
-        Desc = "Niemand weiß was drin ist. Das Ergebnis? Völlig zufällig. Viel Glück!",
+    ExperimentalSerum = {
+        Id = "ExperimentalSerum",
+        Name = "Experimental Serum",
+        Desc = "Nobody knows what's in it. The result? Completely random. Good luck!",
         Effect = "Random",
         Value = true,
         Cost = 100,
@@ -176,8 +176,8 @@ MutationRecipes.Catalysts = {
 }
 
 -- ============================================================
--- FALLBACK-TABELLE
--- Bei fehlgeschlagener Mutation bekommt man eine dieser Pflanzen zurück
+-- FALLBACK TABLE
+-- On failed mutation, the player receives one of these plants back
 -- ============================================================
 
 MutationRecipes.Fallbacks = {
@@ -189,7 +189,7 @@ MutationRecipes.Fallbacks = {
 }
 
 -- ============================================================
--- HILFSFUNKTIONEN
+-- HELPER FUNCTIONS
 -- ============================================================
 
 -- Find a recipe that matches two plant inputs (order-independent)

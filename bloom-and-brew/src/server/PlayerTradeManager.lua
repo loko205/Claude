@@ -1,7 +1,7 @@
 --[[
-    PlayerTradeManager.lua — P2P-Handel, Trankstand, Schwarzes Brett, Auktionshaus
-    Stammkunden-System, Dealer-Rep, Vertrauenssystem.
-    ALLES server-validiert, Rate-Limited, Anti-Exploit.
+    PlayerTradeManager.lua — P2P Trading, Potion Stand, Market Board, Auction House
+    Regular Customers, Dealer Rep, Trust System.
+    All server-validated, rate-limited, anti-exploit.
 ]]
 
 local Players = game:GetService("Players")
@@ -55,20 +55,20 @@ local function rateCheck(player)
 end
 
 -- ============================================================
--- 1. DIREKTHANDEL (P2P Trade)
+-- 1. DIRECT TRADE (P2P Trade)
 -- ============================================================
 
 function PlayerTradeManager.SendTradeRequest(sender, targetPlayer)
     local senderData = DataManager.GetData(sender)
-    if not senderData then return false, "Keine Daten" end
+    if not senderData then return false, "No data" end
 
     if senderData.Level < Config.Trade.DirectTradeLevel then
-        return false, "Level " .. Config.Trade.DirectTradeLevel .. " benötigt"
+        return false, "Level " .. Config.Trade.DirectTradeLevel .. " required"
     end
 
     -- Check target is valid player
     if not targetPlayer or not targetPlayer:IsA("Player") then
-        return false, "Ungültiger Spieler"
+        return false, "Invalid player"
     end
 
     -- Create trade session
@@ -89,16 +89,16 @@ function PlayerTradeManager.SendTradeRequest(sender, targetPlayer)
     }
 
     -- TODO: Notify target player
-    return true, "Handelsanfrage gesendet!", tradeId
+    return true, "Trade request sent!", tradeId
 end
 
 function PlayerTradeManager.ConfirmTrade(player, tradeId)
     local trade = activeTrades[tradeId]
-    if not trade then return false, "Trade nicht gefunden" end
+    if not trade then return false, "Trade not found" end
 
     local isPlayer1 = trade.Player1 == player
     local isPlayer2 = trade.Player2 == player
-    if not isPlayer1 and not isPlayer2 then return false, "Nicht dein Trade" end
+    if not isPlayer1 and not isPlayer2 then return false, "Not your trade" end
 
     if isPlayer1 then trade.Confirmed1 = true end
     if isPlayer2 then trade.Confirmed2 = true end
@@ -109,37 +109,37 @@ function PlayerTradeManager.ConfirmTrade(player, tradeId)
             -- Start anti-scam countdown
             trade.ConfirmTime = os.time()
             -- TODO: Notify both players about countdown
-            return true, "Beide bestätigt! " .. Config.Trade.AntiScamCountdown .. "s Countdown..."
+            return true, "Both confirmed! " .. Config.Trade.AntiScamCountdown .. "s Countdown..."
         end
 
         -- Check countdown
         local elapsed = os.time() - trade.ConfirmTime
         if elapsed < Config.Trade.AntiScamCountdown then
-            return false, "Countdown läuft noch (" .. (Config.Trade.AntiScamCountdown - elapsed) .. "s)"
+            return false, "Countdown still running (" .. (Config.Trade.AntiScamCountdown - elapsed) .. "s)"
         end
 
         -- Execute trade!
         return PlayerTradeManager.ExecuteTrade(tradeId)
     end
 
-    return true, "Bestätigt! Warte auf den anderen Spieler..."
+    return true, "Confirmed! Waiting for the other player..."
 end
 
 function PlayerTradeManager.ExecuteTrade(tradeId)
     local trade = activeTrades[tradeId]
-    if not trade then return false, "Trade nicht gefunden" end
+    if not trade then return false, "Trade not found" end
 
     local data1 = DataManager.GetData(trade.Player1)
     local data2 = DataManager.GetData(trade.Player2)
-    if not data1 or not data2 then return false, "Spielerdaten nicht verfügbar" end
+    if not data1 or not data2 then return false, "Player data unavailable" end
 
     -- Calculate tax
     local tax1 = math.floor(trade.Coins1 * Config.Trade.TradeTax)
     local tax2 = math.floor(trade.Coins2 * Config.Trade.TradeTax)
 
     -- Validate coins
-    if data1.Coins < trade.Coins1 then return false, "Spieler 1 hat nicht genug Coins" end
-    if data2.Coins < trade.Coins2 then return false, "Spieler 2 hat nicht genug Coins" end
+    if data1.Coins < trade.Coins1 then return false, "Player 1 doesn't have enough Coins" end
+    if data2.Coins < trade.Coins2 then return false, "Player 2 doesn't have enough Coins" end
 
     -- Transfer coins (after tax)
     DataManager.RemoveCoins(trade.Player1, trade.Coins1)
@@ -165,7 +165,7 @@ function PlayerTradeManager.ExecuteTrade(tradeId)
     -- Clean up
     activeTrades[tradeId] = nil
 
-    return true, "Handel abgeschlossen!"
+    return true, "Trade completed!"
 end
 
 function PlayerTradeManager.CancelTrade(player, tradeId)
@@ -174,34 +174,34 @@ function PlayerTradeManager.CancelTrade(player, tradeId)
     if trade.Player1 ~= player and trade.Player2 ~= player then return false end
 
     activeTrades[tradeId] = nil
-    return true, "Handel abgebrochen"
+    return true, "Trade cancelled"
 end
 
 -- ============================================================
--- 2. TRANKSTAND
+-- 2. POTION STAND
 -- ============================================================
 
 function PlayerTradeManager.ListOnStand(player, potionIndex, price)
     local data = DataManager.GetData(player)
-    if not data then return false, "Keine Daten" end
+    if not data then return false, "No data" end
 
     if data.Level < Config.Trade.StandLevel then
-        return false, "Trankstand ab Level " .. Config.Trade.StandLevel
+        return false, "Potion Stand unlocks at Level " .. Config.Trade.StandLevel
     end
 
     -- Check slots
-    local maxSlots = PlayerTradeData.GetStandSlots(data.Trade.DealerRep, data.Gamepasses and data.Gamepasses.ErweiterterStand)
+    local maxSlots = PlayerTradeData.GetStandSlots(data.Trade.DealerRep, data.Gamepasses and data.Gamepasses.ExpandedStand)
     if #data.Trade.StandOffers >= maxSlots then
-        return false, "Alle Stand-Slots belegt (" .. maxSlots .. " max)"
+        return false, "All stand slots occupied (" .. maxSlots .. " max)"
     end
 
     -- Validate potion
     local potion = data.Inventory.Potions[potionIndex]
-    if not potion then return false, "Trank nicht im Inventar" end
+    if not potion then return false, "Potion not in inventory" end
 
     -- Validate price (anti-exploit: must be positive, reasonable)
     if type(price) ~= "number" or price <= 0 or price > 999999 then
-        return false, "Ungültiger Preis"
+        return false, "Invalid price"
     end
 
     -- Move potion to stand
@@ -215,23 +215,23 @@ function PlayerTradeManager.ListOnStand(player, potionIndex, price)
     table.insert(data.Trade.StandOffers, standOffer)
 
     local potionInfo = PotionData.GetPotion(potion.PotionId)
-    return true, (potionInfo and potionInfo.Name or potion.PotionId) .. " für " .. price .. " Coins am Stand!"
+    return true, (potionInfo and potionInfo.Name or potion.PotionId) .. " listed for " .. price .. " Coins on stand!"
 end
 
 function PlayerTradeManager.BuyFromStand(buyer, sellerId, offerIndex)
     local seller = Players:GetPlayerByUserId(sellerId)
-    if not seller then return false, "Verkäufer nicht online" end
+    if not seller then return false, "Seller not online" end
 
     local buyerData = DataManager.GetData(buyer)
     local sellerData = DataManager.GetData(seller)
-    if not buyerData or not sellerData then return false, "Daten nicht verfügbar" end
+    if not buyerData or not sellerData then return false, "Data unavailable" end
 
     local offer = sellerData.Trade.StandOffers[offerIndex]
-    if not offer then return false, "Angebot existiert nicht" end
+    if not offer then return false, "Offer does not exist" end
 
     -- Can afford?
     if buyerData.Coins < offer.Price then
-        return false, "Nicht genug Coins (" .. offer.Price .. " benötigt)"
+        return false, "Not enough Coins (" .. offer.Price .. " required)"
     end
 
     -- Execute purchase
@@ -255,7 +255,7 @@ function PlayerTradeManager.BuyFromStand(buyer, sellerId, offerIndex)
     sellerData.Trade.TotalSales = sellerData.Trade.TotalSales + 1
     sellerData.Trade.DealerRank = PlayerTradeData.GetDealerRank(sellerData.Trade.DealerRep).Name
 
-    -- Stammkunden-Tracking
+    -- Regular customer tracking (loyalty)
     local buyerIdStr = tostring(buyer.UserId)
     sellerData.Trade.FavoriteSuppliers = sellerData.Trade.FavoriteSuppliers or {}
     -- Track purchases from this buyer
@@ -267,45 +267,45 @@ function PlayerTradeManager.BuyFromStand(buyer, sellerId, offerIndex)
     sellerData.Stats.PlayerSales = sellerData.Stats.PlayerSales + 1
     DataManager.AddXP(seller, Config.Economy.XP.PlayerSale)
 
-    return true, "Gekauft für " .. offer.Price .. " Coins!"
+    return true, "Purchased for " .. offer.Price .. " Coins!"
 end
 
 -- ============================================================
--- 3. SCHWARZES BRETT (Marktplatz)
+-- 3. MARKET BOARD (Marketplace)
 -- ============================================================
 
 function PlayerTradeManager.PostMarketOffer(player, itemType, itemIndex, price, isSecret)
     local data = DataManager.GetData(player)
-    if not data then return false, "Keine Daten" end
+    if not data then return false, "No data" end
 
     if data.Level < Config.Trade.MarketLevel then
-        return false, "Schwarzes Brett ab Level " .. Config.Trade.MarketLevel
+        return false, "Market Board unlocks at Level " .. Config.Trade.MarketLevel
     end
 
     if #data.Trade.MarketOffers >= Config.Trade.MaxMarketOffers then
-        return false, "Maximale Angebote erreicht (" .. Config.Trade.MaxMarketOffers .. ")"
+        return false, "Maximum offers reached (" .. Config.Trade.MaxMarketOffers .. ")"
     end
 
     -- Secret offers require rep
     if isSecret and data.Trade.DealerRep < Config.Trade.SecretOfferMinRep then
-        return false, "Geheime Angebote ab " .. Config.Trade.SecretOfferMinRep .. " Dealer-Rep"
+        return false, "Secret offers require " .. Config.Trade.SecretOfferMinRep .. " Dealer Rep"
     end
 
     if type(price) ~= "number" or price <= 0 or price > 999999 then
-        return false, "Ungültiger Preis"
+        return false, "Invalid price"
     end
 
     local itemData
     if itemType == "Potion" then
         itemData = data.Inventory.Potions[itemIndex]
-        if not itemData then return false, "Trank nicht im Inventar" end
+        if not itemData then return false, "Potion not in inventory" end
         table.remove(data.Inventory.Potions, itemIndex)
     elseif itemType == "Plant" then
         itemData = data.Inventory.Plants[itemIndex]
-        if not itemData then return false, "Pflanze nicht im Inventar" end
+        if not itemData then return false, "Plant not in inventory" end
         table.remove(data.Inventory.Plants, itemIndex)
     else
-        return false, "Ungültiger Item-Typ"
+        return false, "Invalid item type"
     end
 
     table.insert(data.Trade.MarketOffers, {
@@ -318,26 +318,26 @@ function PlayerTradeManager.PostMarketOffer(player, itemType, itemIndex, price, 
         SellerName = player.Name,
     })
 
-    return true, "Am Schwarzen Brett gelistet!"
+    return true, "Listed on Market Board!"
 end
 
 function PlayerTradeManager.BuyMarketOffer(buyer, sellerId, offerIndex)
     local seller = Players:GetPlayerByUserId(sellerId)
-    if not seller then return false, "Verkäufer nicht online" end
+    if not seller then return false, "Seller not online" end
 
     local buyerData = DataManager.GetData(buyer)
     local sellerData = DataManager.GetData(seller)
-    if not buyerData or not sellerData then return false, "Daten nicht verfügbar" end
+    if not buyerData or not sellerData then return false, "Data unavailable" end
 
     local offer = sellerData.Trade.MarketOffers[offerIndex]
-    if not offer then return false, "Angebot existiert nicht" end
+    if not offer then return false, "Offer does not exist" end
 
     -- Secret offer visibility check
     if offer.Secret and not PlayerTradeData.CanSeeSecretOffers(buyerData.Trade.DealerRep) then
-        return false, "Dieses Angebot ist nur für Eingeweihte sichtbar"
+        return false, "This offer is only visible to insiders"
     end
 
-    -- Stammkunden-Rabatt
+    -- Regular customer discount
     local discount = 0
     local sellerIdStr = tostring(sellerId)
     local purchases = buyerData.Trade.FavoriteSuppliers and buyerData.Trade.FavoriteSuppliers[sellerIdStr] or 0
@@ -348,7 +348,7 @@ function PlayerTradeManager.BuyMarketOffer(buyer, sellerId, offerIndex)
     local finalPrice = math.floor(offer.Price * (1 - discount))
 
     if buyerData.Coins < finalPrice then
-        return false, "Nicht genug Coins (" .. finalPrice .. " benötigt)"
+        return false, "Not enough Coins (" .. finalPrice .. " required)"
     end
 
     -- Execute
@@ -371,28 +371,28 @@ function PlayerTradeManager.BuyMarketOffer(buyer, sellerId, offerIndex)
     sellerData.Trade.DealerRank = PlayerTradeData.GetDealerRank(sellerData.Trade.DealerRep).Name
     DataManager.AddXP(seller, Config.Economy.XP.PlayerSale)
 
-    local discountMsg = discount > 0 and " (Stammkunden-Rabatt: -" .. math.floor(discount * 100) .. "%)" or ""
-    return true, "Gekauft für " .. finalPrice .. " Coins!" .. discountMsg
+    local discountMsg = discount > 0 and " (Regular discount: -" .. math.floor(discount * 100) .. "%)" or ""
+    return true, "Purchased for " .. finalPrice .. " Coins!" .. discountMsg
 end
 
 -- ============================================================
--- 4. AUKTIONSHAUS
+-- 4. AUCTION HOUSE
 -- ============================================================
 
 function PlayerTradeManager.CreateAuction(player, itemType, itemIndex, minBid, durationIndex, buyoutPrice)
     local data = DataManager.GetData(player)
-    if not data then return false, "Keine Daten" end
+    if not data then return false, "No data" end
 
     if data.Level < Config.Trade.AuctionLevel then
-        return false, "Auktionshaus ab Level " .. Config.Trade.AuctionLevel
+        return false, "Auction House unlocks at Level " .. Config.Trade.AuctionLevel
     end
 
     if type(minBid) ~= "number" or minBid <= 0 then
-        return false, "Ungültiges Mindestgebot"
+        return false, "Invalid minimum bid"
     end
 
     local duration = Config.Trade.AuctionDurations[durationIndex or 1]
-    if not duration then return false, "Ungültige Dauer" end
+    if not duration then return false, "Invalid duration" end
 
     local itemData
     if itemType == "Potion" then
@@ -404,7 +404,7 @@ function PlayerTradeManager.CreateAuction(player, itemType, itemIndex, minBid, d
         if not itemData then return false end
         table.remove(data.Inventory.Plants, itemIndex)
     else
-        return false, "Ungültiger Item-Typ"
+        return false, "Invalid item type"
     end
 
     table.insert(data.Trade.Auctions, {
@@ -420,33 +420,33 @@ function PlayerTradeManager.CreateAuction(player, itemType, itemIndex, minBid, d
         SellerName = player.Name,
     })
 
-    return true, "Auktion erstellt!"
+    return true, "Auction created!"
 end
 
 function PlayerTradeManager.BidOnAuction(bidder, sellerId, auctionIndex, bidAmount)
     local seller = Players:GetPlayerByUserId(sellerId)
-    if not seller then return false, "Verkäufer nicht online" end
+    if not seller then return false, "Seller not online" end
 
     local bidderData = DataManager.GetData(bidder)
     local sellerData = DataManager.GetData(seller)
     if not bidderData or not sellerData then return false end
 
     local auction = sellerData.Trade.Auctions[auctionIndex]
-    if not auction then return false, "Auktion existiert nicht" end
+    if not auction then return false, "Auction does not exist" end
 
     -- Check not expired
     if os.time() >= auction.EndTime then
-        return false, "Auktion abgelaufen"
+        return false, "Auction expired"
     end
 
     -- Validate bid
     local minRequired = math.max(auction.MinBid, math.floor(auction.CurrentBid * (1 + PlayerTradeData.Rules.Auction.MinBidIncrement)))
     if bidAmount < minRequired then
-        return false, "Mindestgebot: " .. minRequired .. " Coins"
+        return false, "Minimum bid: " .. minRequired .. " Coins"
     end
 
     if bidderData.Coins < bidAmount then
-        return false, "Nicht genug Coins"
+        return false, "Not enough Coins"
     end
 
     -- Refund previous bidder
@@ -463,22 +463,22 @@ function PlayerTradeManager.BidOnAuction(bidder, sellerId, auctionIndex, bidAmou
     auction.BidderId = bidder.UserId
     auction.BidderName = bidder.Name
 
-    return true, "Gebot: " .. bidAmount .. " Coins!"
+    return true, "Bid: " .. bidAmount .. " Coins!"
 end
 
 function PlayerTradeManager.BuyoutAuction(buyer, sellerId, auctionIndex)
     local seller = Players:GetPlayerByUserId(sellerId)
-    if not seller then return false, "Verkäufer nicht online" end
+    if not seller then return false, "Seller not online" end
 
     local sellerData = DataManager.GetData(seller)
     if not sellerData then return false end
 
     local auction = sellerData.Trade.Auctions[auctionIndex]
-    if not auction or not auction.BuyoutPrice then return false, "Kein Sofortkauf möglich" end
+    if not auction or not auction.BuyoutPrice then return false, "No buyout available" end
 
     local buyerData = DataManager.GetData(buyer)
     if buyerData.Coins < auction.BuyoutPrice then
-        return false, "Nicht genug Coins"
+        return false, "Not enough Coins"
     end
 
     -- Refund previous bidder
@@ -507,11 +507,11 @@ function PlayerTradeManager.BuyoutAuction(buyer, sellerId, auctionIndex)
     sellerData.Trade.DealerRep = sellerData.Trade.DealerRep + PlayerTradeData.RepGains.SuccessfulSale
     sellerData.Trade.TotalSales = sellerData.Trade.TotalSales + 1
 
-    return true, "Sofortkauf für " .. auction.BuyoutPrice .. " Coins!"
+    return true, "Buyout for " .. auction.BuyoutPrice .. " Coins!"
 end
 
 -- ============================================================
--- AUKTIONS-ABLAUF TICK
+-- AUCTION EXPIRY TICK
 -- ============================================================
 
 local function auctionExpiryTick()

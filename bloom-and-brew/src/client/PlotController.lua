@@ -1,6 +1,6 @@
 --[[
-    PlotController.lua — Client-seitiger Garten-Controller (STUB)
-    Steuert Garten-Rendering, Pflanz-Interaktionen und Verarbeitungs-UI.
+    PlotController.lua — Client-side Garden Controller (STUB)
+    Handles garden rendering, planting interactions, and processing UI.
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -14,59 +14,59 @@ local PlotController = {}
 local player = Players.LocalPlayer
 
 -- ============================================================
--- TODO: GARTEN-RENDERING
+-- TODO: GARDEN RENDERING
 -- ============================================================
--- [ ] Plot-Grid (3x3) visuell darstellen mit Bodenplatten
--- [ ] Pflanze pro Feld als 3D-Modell (5 Wachstumsphasen)
--- [ ] Wachstumsfortschritt-Balken über jeder Pflanze
--- [ ] Qualitäts-Sterne anzeigen (★-★★★★★)
--- [ ] Trait-Icons neben der Pflanze (Leuchtend = Glow-Effekt, etc.)
--- [ ] Überreif-Warnung (rotes Blinken ab Progress > 1.0)
--- [ ] Boden-Typ visuell unterscheidbar (Farbe/Textur)
--- [ ] Plot-Typ Badge (Standard/Gewächshaus/Mutation/Premium)
+-- [ ] Display plot grid (3x3) visually with ground tiles
+-- [ ] Plant per tile as 3D model (5 growth stages)
+-- [ ] Growth progress bar above each plant
+-- [ ] Display quality stars (★-★★★★★)
+-- [ ] Trait icons next to the plant (Glowing = glow effect, etc.)
+-- [ ] Overripe warning (red flashing when progress > 1.0)
+-- [ ] Soil type visually distinguishable (color/texture)
+-- [ ] Plot type badge (Standard/Greenhouse/Mutation/Premium)
 
 -- ============================================================
--- TODO: PFLANZ-INTERAKTIONEN
+-- TODO: PLANTING INTERACTIONS
 -- ============================================================
--- [ ] Seed-Picker UI: Samen aus Inventar auswählen
--- [ ] Klick auf leeres Feld → Samen pflanzen (Fire PlantRemotes.PlantSeed)
--- [ ] Klick auf Pflanze → Aktionsmenü (Gießen/Düngen/Beschneiden/Ernten)
--- [ ] Gießen-Animation (Gießkanne, Wasserpartikel)
--- [ ] Dünge-Animation (Sparkle-Effekt)
--- [ ] Ernte-Animation (Pflanze verschwindet, Item-Popup)
--- [ ] Gieß-Cooldown-Anzeige (30s Timer pro Pflanze)
+-- [ ] Seed picker UI: Select seeds from inventory
+-- [ ] Click on empty tile → Plant seed (Fire PlantRemotes.PlantSeed)
+-- [ ] Click on plant → Action menu (Water/Fertilize/Prune/Harvest)
+-- [ ] Watering animation (watering can, water particles)
+-- [ ] Fertilize animation (sparkle effect)
+-- [ ] Harvest animation (plant disappears, item popup)
+-- [ ] Watering cooldown display (30s timer per plant)
 
 -- ============================================================
--- TODO: VERARBEITUNGS-UI (NEU)
+-- TODO: PROCESSING UI (NEW)
 -- ============================================================
--- [ ] Verarbeitungsstation als interaktives Objekt neben dem Garten
--- [ ] Maschinen-Auswahl (nur freigeschaltete anzeigen)
--- [ ] Maschinen-Kauf-Dialog mit Kosten und Level-Req
--- [ ] Pflanze-zu-Maschine Drag & Drop
--- [ ] Warnung bei falscher Methode ("ACHTUNG: Pflanze wird zerstört!")
--- [ ] Empfehlung für richtige Methode anzeigen
--- [ ] Fortschrittsbalken für aktive Verarbeitungen
--- [ ] Extrakt-Einsammel-Animation (Fläschchen füllt sich)
--- [ ] Maschinen-Upgrade UI (Einfach → Verbessert → Meister)
--- [ ] Extrakt-Inventar-Anzeige (was hab ich, wie viel, welche Potenz?)
+-- [ ] Processing station as interactive object next to the garden
+-- [ ] Machine selection (only show unlocked ones)
+-- [ ] Machine purchase dialog with costs and level requirement
+-- [ ] Plant-to-machine drag & drop
+-- [ ] Warning for wrong method ("WARNING: Plant will be destroyed!")
+-- [ ] Show recommendation for correct method
+-- [ ] Progress bar for active processing tasks
+-- [ ] Extract collection animation (vial fills up)
+-- [ ] Machine upgrade UI (Basic → Improved → Master)
+-- [ ] Extract inventory display (what do I have, how much, what potency?)
 
 -- ============================================================
--- TODO: PLOT-MANAGEMENT
+-- TODO: PLOT MANAGEMENT
 -- ============================================================
--- [ ] Plot-Kauf-Button (wenn < MaxPlots)
--- [ ] Plot-Upgrade-Button mit Kosten-Anzeige
--- [ ] Boden-Wechsel UI
--- [ ] Plot-Typ-Auswahl beim Kauf
--- [ ] Übersicht aller Plots (Minimap?)
+-- [ ] Plot purchase button (if < MaxPlots)
+-- [ ] Plot upgrade button with cost display
+-- [ ] Soil change UI
+-- [ ] Plot type selection on purchase
+-- [ ] Overview of all plots (minimap?)
 
 -- ============================================================
--- TODO: GARTENBESUCH (andere Spieler)
+-- TODO: GARDEN VISITS (other players)
 -- ============================================================
--- [ ] "Besuchen"-Button bei anderen Spielern
--- [ ] Besuchs-Modus: Nur Anschauen + Gießhilfe
--- [ ] "Gefällt mir"-Button
--- [ ] Gästebuch-UI
--- [ ] Pflanzen-Info-Popup beim Hovern
+-- [ ] "Visit" button for other players
+-- [ ] Visit mode: View only + watering help
+-- [ ] "Like" button
+-- [ ] Guestbook UI
+-- [ ] Plant info popup on hover
 
 -- Placeholder initialization
 function PlotController.Init()

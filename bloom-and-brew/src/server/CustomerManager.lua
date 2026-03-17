@@ -1,7 +1,7 @@
 --[[
-    CustomerManager.lua — NPC-Kunden-Spawning, Aufträge, Belohnungen
-    Generiert Aufträge basierend auf Spieler-Rep und Level.
-    NPCs wollen Pflanzen UND Tränke (mit Reinheits-Anforderungen).
+    CustomerManager.lua — NPC Customer Spawning, Orders, Rewards
+    Generates orders based on player rep and level.
+    NPCs want plants AND potions (with purity requirements).
 ]]
 
 local Players = game:GetService("Players")
@@ -39,7 +39,7 @@ local function createRemotes()
 end
 
 -- ============================================================
--- AUFTRAGS-GENERIERUNG
+-- ORDER GENERATION
 -- ============================================================
 
 -- Generate a specific order with concrete item requirements
@@ -89,7 +89,7 @@ local function generateConcreteOrder(customerTypeId, playerLevel, playerRep)
 end
 
 -- ============================================================
--- AUFTRAGS-SPAWNING (Timer-basiert)
+-- ORDER SPAWNING (timer-based)
 -- ============================================================
 
 local playerSpawnTimers = {}
@@ -147,7 +147,7 @@ local function customerSpawnLoop()
 end
 
 -- ============================================================
--- TIMER-ABLAUF
+-- TIMER EXPIRY
 -- ============================================================
 
 local function checkExpiredOrders()
@@ -175,34 +175,34 @@ local function checkExpiredOrders()
 end
 
 -- ============================================================
--- AUFTRAGSERFÜLLUNG
+-- ORDER FULFILLMENT
 -- ============================================================
 
 function CustomerManager.FulfillOrder(player, orderIndex, itemIndices)
     local data = DataManager.GetData(player)
-    if not data then return false, "Keine Daten" end
+    if not data then return false, "No data" end
 
     local order = data.Customers.ActiveOrders[orderIndex]
-    if not order then return false, "Auftrag existiert nicht" end
+    if not order then return false, "Order does not exist" end
 
     -- Check timer
     if os.time() >= order.ExpiresAt then
         table.remove(data.Customers.ActiveOrders, orderIndex)
-        return false, "Auftrag abgelaufen!"
+        return false, "Order expired!"
     end
 
     if type(itemIndices) ~= "table" or #itemIndices < order.Amount then
-        return false, "Nicht genug Items"
+        return false, "Not enough items"
     end
 
     -- Validate items
     if order.Type == "Plant" then
         for _, idx in ipairs(itemIndices) do
             local plant = data.Inventory.Plants[idx]
-            if not plant then return false, "Pflanze nicht im Inventar" end
-            if plant.PlantId ~= order.ItemId then return false, "Falsche Pflanze" end
+            if not plant then return false, "Plant not in inventory" end
+            if plant.PlantId ~= order.ItemId then return false, "Wrong plant" end
             if plant.Quality < (order.MinQuality or 1) then
-                return false, "Qualität zu niedrig (min. " .. order.MinQuality .. "★)"
+                return false, "Quality too low (min. " .. order.MinQuality .. "★)"
             end
         end
 
@@ -215,10 +215,10 @@ function CustomerManager.FulfillOrder(player, orderIndex, itemIndices)
     elseif order.Type == "Potion" then
         for _, idx in ipairs(itemIndices) do
             local potion = data.Inventory.Potions[idx]
-            if not potion then return false, "Trank nicht im Inventar" end
-            if potion.PotionId ~= order.ItemId then return false, "Falscher Trank" end
+            if not potion then return false, "Potion not in inventory" end
+            if potion.PotionId ~= order.ItemId then return false, "Wrong potion" end
             if potion.Purity < (order.MinPurity or 0) then
-                return false, "Reinheit zu niedrig (min. " .. order.MinPurity .. "%)"
+                return false, "Purity too low (min. " .. order.MinPurity .. "%)"
             end
         end
 
@@ -246,25 +246,25 @@ function CustomerManager.FulfillOrder(player, orderIndex, itemIndices)
         for _, bonus in ipairs(customerType.BonusRewards) do
             if math.random() < bonus.Chance then
                 if bonus.Type == "RecipeHint" then
-                    bonusMsg = bonusMsg .. " + Rezept-Hinweis!"
+                    bonusMsg = bonusMsg .. " + Recipe hint!"
                 elseif bonus.Type == "RareSeed" then
                     -- Give a random rare seed
                     local rarePlants = PlantData.GetPlantsByRarity("Rare")
                     for id in pairs(rarePlants) do
                         data.Inventory.Seeds[id] = (data.Inventory.Seeds[id] or 0) + 1
-                        bonusMsg = bonusMsg .. " + Seltener Samen: " .. rarePlants[id].Name
+                        bonusMsg = bonusMsg .. " + Rare seed: " .. rarePlants[id].Name
                         break
                     end
                 elseif bonus.Type == "Catalyst" then
-                    local catalysts = { "Mondstein", "Sonnenkristall", "Wurmkompost" }
+                    local catalysts = { "Moonstone", "Suncrystal", "WormCompost" }
                     local catalystId = catalysts[math.random(1, #catalysts)]
                     data.Inventory.Catalysts[catalystId] = (data.Inventory.Catalysts[catalystId] or 0) + 1
-                    bonusMsg = bonusMsg .. " + Katalysator: " .. catalystId
+                    bonusMsg = bonusMsg .. " + Catalyst: " .. catalystId
                 elseif bonus.Type == "MythicSeed" then
                     local mythicPlants = PlantData.GetPlantsByRarity("Mythic")
                     for id in pairs(mythicPlants) do
                         data.Inventory.Seeds[id] = (data.Inventory.Seeds[id] or 0) + 1
-                        bonusMsg = bonusMsg .. " + MYTHIC Samen: " .. mythicPlants[id].Name .. "!!!"
+                        bonusMsg = bonusMsg .. " + MYTHIC seed: " .. mythicPlants[id].Name .. "!!!"
                         break
                     end
                 end
@@ -278,7 +278,7 @@ function CustomerManager.FulfillOrder(player, orderIndex, itemIndices)
     DataManager.AddXP(player, Config.Economy.XP.NPCOrder)
 
     -- Reputation gain based on customer type
-    local repGain = { Dorfbewohner = 5, Heiler = 15, Adeliger = 30, Hexenmeister = 75, DerSchatten = 200 }
+    local repGain = { Villager = 5, Healer = 15, Noble = 30, Warlock = 75, TheShadow = 200 }
     data.Reputation = data.Reputation + (repGain[order.CustomerType] or 5)
 
     -- Remove order

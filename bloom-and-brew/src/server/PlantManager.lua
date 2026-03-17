@@ -1,7 +1,7 @@
 --[[
-    PlantManager.lua — Pflanzen, Wachstum, Gießen, Ernten
-    Server-Tick alle 1s für Wachstumsfortschritt.
-    Alle Aktionen serverseitig validiert.
+    PlantManager.lua — Plants, Growth, Watering, Harvesting
+    Server tick every 1s for growth progress.
+    All actions validated server-side.
 ]]
 
 local Players = game:GetService("Players")
@@ -36,7 +36,7 @@ local function createRemotes()
 end
 
 -- ============================================================
--- WACHSTUMS-TICK
+-- GROWTH TICK
 -- ============================================================
 
 local function growthTick()
@@ -64,13 +64,13 @@ local function growthTick()
                     speedMult = speedMult * Config.Garden.WaterSpeedMult
                 end
 
-                -- Trait: Schnellwachsend
-                if field.Traits and table.find(field.Traits, "Schnellwachsend") then
-                    speedMult = speedMult * Config.Plants.Traits.Schnellwachsend.SpeedMult
+                -- Trait: FastGrowing
+                if field.Traits and table.find(field.Traits, "FastGrowing") then
+                    speedMult = speedMult * Config.Plants.Traits.FastGrowing.SpeedMult
                 end
 
-                -- Trait: Selbstgiessend (auto-water)
-                if field.Traits and table.find(field.Traits, "Selbstgiessend") then
+                -- Trait: SelfWatering (auto-water)
+                if field.Traits and table.find(field.Traits, "SelfWatering") then
                     speedMult = speedMult * Config.Garden.WaterSpeedMult
                 end
 
@@ -80,8 +80,8 @@ local function growthTick()
 
                 -- Overripe quality loss
                 if field.GrowthProgress > Config.Garden.OverripeQualityLoss then
-                    -- Trait: Unsterblich prevents overripe
-                    if not (field.Traits and table.find(field.Traits, "Unsterblich")) then
+                    -- Trait: Immortal prevents overripe
+                    if not (field.Traits and table.find(field.Traits, "Immortal")) then
                         -- Degrade quality over time
                         local overripeAmount = field.GrowthProgress - Config.Garden.OverripeQualityLoss
                         field.QualityLoss = math.min(overripeAmount * 0.5, 0.8) -- Max 80% quality loss
@@ -97,12 +97,12 @@ end
 -- ============================================================
 
 function PlantManager.GetGrowthPhase(progress)
-    if progress < 0.2 then return "Samen"
-    elseif progress < 0.4 then return "Sproessling"
-    elseif progress < 0.6 then return "Wachstum"
-    elseif progress < 0.8 then return "Bluete"
-    elseif progress <= 1.0 then return "Ernte"
-    else return "Ueberreif"
+    if progress < 0.2 then return "Seed"
+    elseif progress < 0.4 then return "Sprout"
+    elseif progress < 0.6 then return "Growing"
+    elseif progress < 0.8 then return "Bloom"
+    elseif progress <= 1.0 then return "Harvest"
+    else return "Overripe"
     end
 end
 
@@ -113,27 +113,27 @@ end
 -- Plant a seed
 function PlantManager.PlantSeed(player, plotIndex, fieldIndex, plantId)
     local data = DataManager.GetData(player)
-    if not data then return false, "Keine Daten" end
+    if not data then return false, "No data" end
 
     -- Validate plot exists
     local plot = data.Plots[plotIndex]
-    if not plot then return false, "Plot existiert nicht" end
+    if not plot then return false, "Plot does not exist" end
 
     -- Validate field is empty
-    if plot.Fields[fieldIndex] then return false, "Feld ist belegt" end
+    if plot.Fields[fieldIndex] then return false, "Field is occupied" end
 
     -- Validate field index
     if fieldIndex < 1 or fieldIndex > Config.Garden.FieldsPerPlot then
-        return false, "Ungültiges Feld"
+        return false, "Invalid field"
     end
 
     -- Validate seed exists in inventory
     local seeds = data.Inventory.Seeds[plantId]
-    if not seeds or seeds <= 0 then return false, "Keine Samen" end
+    if not seeds or seeds <= 0 then return false, "No seeds" end
 
     -- Validate plant exists
     local plantInfo = PlantData.GetPlant(plantId)
-    if not plantInfo then return false, "Unbekannte Pflanze" end
+    if not plantInfo then return false, "Unknown plant" end
 
     -- Plant!
     data.Inventory.Seeds[plantId] = seeds - 1
@@ -152,33 +152,33 @@ function PlantManager.PlantSeed(player, plotIndex, fieldIndex, plantId)
         QualityLoss = 0,
     }
 
-    return true, "Gepflanzt!"
+    return true, "Planted!"
 end
 
 -- Water a plant
 function PlantManager.WaterPlant(player, plotIndex, fieldIndex)
     local data = DataManager.GetData(player)
-    if not data then return false, "Keine Daten" end
+    if not data then return false, "No data" end
 
     local plot = data.Plots[plotIndex]
-    if not plot then return false, "Plot existiert nicht" end
+    if not plot then return false, "Plot does not exist" end
 
     local field = plot.Fields[fieldIndex]
-    if not field then return false, "Kein Pflanze hier" end
+    if not field then return false, "No plant here" end
 
     -- Cooldown check
     local now = os.time()
     if (now - (field.LastWatered or 0)) < Config.Garden.WaterCooldown then
-        return false, "Noch nass!"
+        return false, "Still wet!"
     end
 
     field.Watered = true
     field.LastWatered = now
 
-    return true, "Gegossen!"
+    return true, "Watered!"
 end
 
--- Water help from another player (Gartenbesuch)
+-- Water help from another player (garden visit)
 function PlantManager.WaterHelpFromVisitor(visitor, owner, plotIndex, fieldIndex)
     local success, msg = PlantManager.WaterPlant(owner, plotIndex, fieldIndex)
     if success then
@@ -206,12 +206,12 @@ function PlantManager.FertilizePlant(player, plotIndex, fieldIndex)
         -- Cost: 50 Coins per fertilize
         if not DataManager.RemoveCoins(player, 50) then
             field.Quality = field.Quality - 1 -- Rollback
-            return false, "Nicht genug Coins"
+            return false, "Not enough Coins"
         end
-        return true, "Gedüngt! Qualität: " .. field.Quality .. " Sterne"
+        return true, "Fertilized! Quality: " .. field.Quality .. " stars"
     end
 
-    return false, "Bereits maximale Qualität"
+    return false, "Already at maximum quality"
 end
 
 -- Prune a plant (+Mutation chance, for later use in MutationEngine)
@@ -226,27 +226,27 @@ function PlantManager.PrunePlant(player, plotIndex, fieldIndex)
     if not field then return false end
 
     field.Pruned = true
-    return true, "Beschnitten! Mutationschance erhöht."
+    return true, "Pruned! Mutation chance increased."
 end
 
 -- Harvest a plant
 function PlantManager.HarvestPlant(player, plotIndex, fieldIndex)
     local data = DataManager.GetData(player)
-    if not data then return false, "Keine Daten" end
+    if not data then return false, "No data" end
 
     local plot = data.Plots[plotIndex]
-    if not plot then return false, "Plot existiert nicht" end
+    if not plot then return false, "Plot does not exist" end
 
     local field = plot.Fields[fieldIndex]
-    if not field then return false, "Keine Pflanze hier" end
+    if not field then return false, "No plant here" end
 
     -- Must be at harvest phase (progress >= 0.8)
     if field.GrowthProgress < 0.8 then
-        return false, "Noch nicht reif! (" .. PlantManager.GetGrowthPhase(field.GrowthProgress) .. ")"
+        return false, "Not ripe yet! (" .. PlantManager.GetGrowthPhase(field.GrowthProgress) .. ")"
     end
 
     local plantInfo = PlantData.GetPlant(field.PlantId)
-    if not plantInfo then return false, "Unbekannte Pflanze" end
+    if not plantInfo then return false, "Unknown plant" end
 
     -- Calculate final quality (apply overripe loss)
     local finalQuality = field.Quality
@@ -255,10 +255,10 @@ function PlantManager.HarvestPlant(player, plotIndex, fieldIndex)
         finalQuality = math.max(1, field.Quality - qualityReduction)
     end
 
-    -- Yield multiplier (Gamepass: Doppelte Ernte)
+    -- Yield multiplier (Gamepass: DoubleHarvest)
     local yieldMult = 1
-    if data.Gamepasses and data.Gamepasses.DoppelteErnte then
-        yieldMult = Config.Economy.Gamepasses.DoppelteErnte.YieldMult
+    if data.Gamepasses and data.Gamepasses.DoubleHarvest then
+        yieldMult = Config.Economy.Gamepasses.DoubleHarvest.YieldMult
     end
 
     -- Add plant to inventory
@@ -283,7 +283,7 @@ function PlantManager.HarvestPlant(player, plotIndex, fieldIndex)
     -- Clear field
     plot.Fields[fieldIndex] = nil
 
-    return true, "Geerntet: " .. plantInfo.Name .. " (" .. finalQuality .. "★)"
+    return true, "Harvested: " .. plantInfo.Name .. " (" .. finalQuality .. "★)"
 end
 
 -- Upgrade a plot
@@ -292,19 +292,19 @@ function PlantManager.UpgradePlot(player, plotIndex)
     if not data then return false end
 
     local plot = data.Plots[plotIndex]
-    if not plot then return false, "Plot existiert nicht" end
+    if not plot then return false, "Plot does not exist" end
 
     if plot.Level >= #Config.Garden.PlotUpgradeCosts then
-        return false, "Maximales Level erreicht"
+        return false, "Maximum level reached"
     end
 
     local cost = Config.Garden.PlotUpgradeCosts[plot.Level]
     if not DataManager.RemoveCoins(player, cost) then
-        return false, "Nicht genug Coins (" .. cost .. " benötigt)"
+        return false, "Not enough Coins (" .. cost .. " needed)"
     end
 
     plot.Level = plot.Level + 1
-    return true, "Plot aufgewertet auf Level " .. plot.Level
+    return true, "Plot upgraded to level " .. plot.Level
 end
 
 -- Buy a new plot
@@ -321,14 +321,14 @@ function PlantManager.BuyPlot(player, plotType)
     end
 
     if currentPlots >= maxPlots then
-        return false, "Maximale Anzahl Plots erreicht"
+        return false, "Maximum number of plots reached"
     end
 
     -- Cost based on how many plots the player already has
     local cost = Config.Garden.PlotUpgradeCosts[currentPlots] or 50000
 
     if not DataManager.RemoveCoins(player, cost) then
-        return false, "Nicht genug Coins"
+        return false, "Not enough Coins"
     end
 
     local newIndex = currentPlots + 1
@@ -339,7 +339,7 @@ function PlantManager.BuyPlot(player, plotType)
         Fields = {},
     }
 
-    return true, "Neuer Plot gekauft!"
+    return true, "New plot purchased!"
 end
 
 -- ============================================================

@@ -1,6 +1,6 @@
 --[[
-    UIController.lua — Haupt-UI Controller (STUB)
-    HUD, Inventar, Level-Anzeige, Benachrichtigungen.
+    UIController.lua — Main UI Controller (STUB)
+    HUD, inventory, level display, notifications.
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -14,51 +14,51 @@ local player = Players.LocalPlayer
 -- ============================================================
 -- TODO: HUD (Head-Up Display)
 -- ============================================================
--- [ ] Oben links: Spieler-Name, Level, XP-Balken
--- [ ] Oben rechts: Coins (gold), Gems (blau), Essenz (lila)
--- [ ] Unter Coins: NPC-Rep Anzeige (kleiner Text)
--- [ ] Dealer-Rang Badge (wenn freigeschaltet)
--- [ ] Minimap/Kompass (optional)
+-- [ ] Top left: Player name, level, XP bar
+-- [ ] Top right: Coins (gold), Gems (blue), Essence (purple)
+-- [ ] Below coins: NPC rep display (small text)
+-- [ ] Dealer rank badge (when unlocked)
+-- [ ] Minimap/compass (optional)
 
 -- ============================================================
--- TODO: INVENTAR-UI
+-- TODO: INVENTORY UI
 -- ============================================================
--- [ ] Tab-basiertes Inventar: Samen | Pflanzen | Extrakte | Tränke | Katalysatoren
--- [ ] Jedes Item: Icon + Name + Menge/Qualität
--- [ ] Pflanzen: Qualitäts-Sterne + Traits als Badges
--- [ ] Tränke: Reinheits-Anzeige + Effekt-Beschreibung
--- [ ] Extrakte: Potenz-Balken + Menge
--- [ ] Rechtsklick/Langes Drücken → Kontextmenü (Verkaufen, Verarbeiten, etc.)
--- [ ] Such-/Filter-Funktion
--- [ ] Sortierung: Name, Rarität, Wert, Menge
+-- [ ] Tab-based inventory: Seeds | Plants | Extracts | Potions | Catalysts
+-- [ ] Each item: Icon + name + quantity/quality
+-- [ ] Plants: Quality stars + traits as badges
+-- [ ] Potions: Purity display + effect description
+-- [ ] Extracts: Potency bar + quantity
+-- [ ] Right-click/long press → Context menu (Sell, Process, etc.)
+-- [ ] Search/filter function
+-- [ ] Sorting: Name, rarity, value, quantity
 
 -- ============================================================
--- TODO: BENACHRICHTIGUNGEN
+-- TODO: NOTIFICATIONS
 -- ============================================================
--- [ ] Toast-Notifications (unten rechts, stackend)
--- [ ] Typen: Ernte fertig, Verarbeitung fertig, Trank fertig, Auftrag erhalten
--- [ ] Level-Up-Animation (Vollbild-Flash + Fanfare)
--- [ ] Neue Entdeckung: Goldener Rahmen + "NEU" Badge
--- [ ] Handelsanfrage-Popup
--- [ ] Täglicher Login-Reward Screen
+-- [ ] Toast notifications (bottom right, stacking)
+-- [ ] Types: Harvest ready, processing done, potion done, order received
+-- [ ] Level-up animation (fullscreen flash + fanfare)
+-- [ ] New discovery: Golden frame + "NEW" badge
+-- [ ] Trade request popup
+-- [ ] Daily login reward screen
 
 -- ============================================================
--- TODO: SAMMELALBUM (Plantdex & Potiondex)
+-- TODO: COLLECTION ALBUM (Plantdex & Potiondex)
 -- ============================================================
--- [ ] Buch-artige UI mit allen Pflanzen/Tränken
--- [ ] Entdeckte Items: Vollständig mit Bild + Beschreibung
--- [ ] Unentdeckte: Silhouette + "???"
--- [ ] Fortschritts-Anzeige (X/Y entdeckt)
--- [ ] Achievements für Vollständigkeit
+-- [ ] Book-style UI with all plants/potions
+-- [ ] Discovered items: Complete with image + description
+-- [ ] Undiscovered: Silhouette + "???"
+-- [ ] Progress display (X/Y discovered)
+-- [ ] Achievements for completion
 
 -- ============================================================
--- TODO: EINSTELLUNGEN
+-- TODO: SETTINGS
 -- ============================================================
--- [ ] Musik-Lautstärke
--- [ ] SFX-Lautstärke
--- [ ] Grafik-Qualität
--- [ ] Benachrichtigungs-Einstellungen
--- [ ] Hilfe / Tutorial wiederholen
+-- [ ] Music volume
+-- [ ] SFX volume
+-- [ ] Graphics quality
+-- [ ] Notification settings
+-- [ ] Help / Replay tutorial
 
 -- Placeholder initialization
 function UIController.Init()

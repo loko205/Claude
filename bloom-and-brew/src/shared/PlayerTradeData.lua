@@ -1,6 +1,6 @@
 --[[
-    PlayerTradeData.lua — Handelsregeln, Auktionshaus-Config, Schwarzmarkt
-    Alle Regeln und Konfiguration für Spieler-zu-Spieler-Interaktionen.
+    PlayerTradeData.lua — Trade rules, auction house config, black market
+    All rules and configuration for player-to-player interactions.
 ]]
 
 local Config = require(script.Parent.Config)
@@ -8,7 +8,7 @@ local Config = require(script.Parent.Config)
 local PlayerTradeData = {}
 
 -- ============================================================
--- DEALER-RÄNGE
+-- DEALER RANKS
 -- ============================================================
 
 PlayerTradeData.DealerRanks = {}
@@ -28,11 +28,11 @@ for i, rank in ipairs(Config.Trade.DealerRanks) do
 end
 
 -- ============================================================
--- HANDELS-REGELN
+-- TRADE RULES
 -- ============================================================
 
 PlayerTradeData.Rules = {
-    -- Direkthandel
+    -- Direct trade
     DirectTrade = {
         LevelReq = Config.Trade.DirectTradeLevel,
         TaxRate = Config.Trade.TradeTax,
@@ -40,28 +40,28 @@ PlayerTradeData.Rules = {
         MaxItemsPerSide = 10,
     },
 
-    -- Schwarzes Brett / Marktplatz
+    -- Bulletin board / marketplace
     Market = {
         LevelReq = Config.Trade.MarketLevel,
         TaxRate = Config.Trade.MarketTax,
         MaxOffers = Config.Trade.MaxMarketOffers,
-        OfferDuration = 86400, -- 24h in Sekunden
+        OfferDuration = 86400, -- 24h in seconds
         SecretOfferMinRep = Config.Trade.SecretOfferMinRep,
-        SortOptions = { "Neueste", "Preis", "Reinheit", "Raritaet" },
+        SortOptions = { "Newest", "Price", "Purity", "Rarity" },
     },
 
-    -- Auktionshaus
+    -- Auction house
     Auction = {
         LevelReq = Config.Trade.AuctionLevel,
         TaxRate = Config.Trade.AuctionTax,
         Durations = Config.Trade.AuctionDurations,
-        DurationNames = { "1 Stunde", "6 Stunden", "24 Stunden" },
-        MinBidIncrement = 0.05, -- 5% über letztem Gebot
-        -- Nur Epic+ Items dürfen versteigert werden
+        DurationNames = { "1 Hour", "6 Hours", "24 Hours" },
+        MinBidIncrement = 0.05, -- 5% above last bid
+        -- Only Epic+ items may be auctioned
         MinRarity = "Epic",
     },
 
-    -- Trankstand
+    -- Potion stand
     Stand = {
         LevelReq = Config.Trade.StandLevel,
         BaseSlots = 3,
@@ -71,48 +71,48 @@ PlayerTradeData.Rules = {
 }
 
 -- ============================================================
--- DEALER-REPUTATION
+-- DEALER REPUTATION
 -- ============================================================
 
 PlayerTradeData.RepGains = {
-    SuccessfulSale = 5,           -- Pro Verkauf
-    HighPurityBonus = 10,         -- Verkauf mit 85%+ Reinheit
-    PerfectPurityBonus = 25,      -- Verkauf mit 96%+ Reinheit
-    RepeatCustomer = 3,           -- Stammkunde kauft erneut
-    PositiveRating = 8,           -- Positive Bewertung
+    SuccessfulSale = 5,           -- Per sale
+    HighPurityBonus = 10,         -- Sale with 85%+ purity
+    PerfectPurityBonus = 25,      -- Sale with 96%+ purity
+    RepeatCustomer = 3,           -- Regular customer buys again
+    PositiveRating = 8,           -- Positive rating
 }
 
 PlayerTradeData.RepLosses = {
-    OverpricedVote = -5,          -- Community-Vote: überteuert
-    FailedDelivery = -15,         -- Auktions-Item nicht geliefert
-    CancelledTrade = -2,          -- Trade abgebrochen nach Confirm
+    OverpricedVote = -5,          -- Community vote: overpriced
+    FailedDelivery = -15,         -- Auction item not delivered
+    CancelledTrade = -2,          -- Trade cancelled after confirm
 }
 
 -- ============================================================
--- STAMMKUNDEN-SYSTEM
+-- REGULAR CUSTOMER SYSTEM
 -- ============================================================
 
 PlayerTradeData.FavoriteSupplier = {
-    -- Wie viele Käufe braucht man um Stammkunde zu werden?
+    -- How many purchases are needed to become a regular customer?
     PurchasesRequired = 5,
-    -- Boni
-    Discount = Config.Trade.FavoriteDiscount, -- 10% Rabatt
+    -- Bonuses
+    Discount = Config.Trade.FavoriteDiscount, -- 10% discount
     NotifyOnNewOffer = true,
     ReservationPriority = true,
     MaxSuppliers = Config.Trade.MaxFavoriteSuppliers,
 }
 
 -- ============================================================
--- VERTRAUENSSYSTEM
+-- TRUST SYSTEM
 -- ============================================================
 
 PlayerTradeData.Trust = {
-    -- Trust-Level steigt mit erfolgreichen Trades
+    -- Trust level increases with successful trades
     Levels = {
-        { Name = "Unbekannt",   MinScore = 0,   Perks = {} },
-        { Name = "Bekannt",     MinScore = 3,   Perks = { "Schnellere Trades" } },
-        { Name = "Vertraut",    MinScore = 10,  Perks = { "Kein Countdown", "Größere Trades" } },
-        { Name = "Partner",     MinScore = 25,  Perks = { "Reduzierte Steuer (3%)", "Direkte Lieferung" } },
+        { Name = "Unknown",   MinScore = 0,   Perks = {} },
+        { Name = "Known",     MinScore = 3,   Perks = { "Faster trades" } },
+        { Name = "Trusted",   MinScore = 10,  Perks = { "No countdown", "Larger trades" } },
+        { Name = "Partner",   MinScore = 25,  Perks = { "Reduced tax (3%)", "Direct delivery" } },
     },
 
     -- Score changes
@@ -122,7 +122,7 @@ PlayerTradeData.Trust = {
 }
 
 -- ============================================================
--- HILFSFUNKTIONEN
+-- HELPER FUNCTIONS
 -- ============================================================
 
 -- Get dealer rank for a given reputation
@@ -141,7 +141,7 @@ function PlayerTradeData.GetStandSlots(dealerRep, hasStandGamepass)
     local rank = PlayerTradeData.GetDealerRank(dealerRep)
     local slots = rank.StandSlots
     if hasStandGamepass then
-        slots = slots + Config.Economy.Gamepasses.ErweiterterStand.BonusSlots
+        slots = slots + Config.Economy.Gamepasses.ExpandedStand.BonusSlots
     end
     return slots
 end
@@ -173,10 +173,10 @@ end
 -- Validate if a trade is allowed (rate limiting, level checks)
 function PlayerTradeData.ValidateTrade(playerLevel, tradeType)
     local rules = PlayerTradeData.Rules[tradeType]
-    if not rules then return false, "Unbekannter Handelstyp" end
+    if not rules then return false, "Unknown trade type" end
 
     if playerLevel < rules.LevelReq then
-        return false, "Level " .. rules.LevelReq .. " benötigt"
+        return false, "Level " .. rules.LevelReq .. " required"
     end
 
     return true, "OK"

@@ -1,6 +1,6 @@
 --[[
-    PlayerInteraction.lua — Spieler-Interaktionen (STUB)
-    Gartenbesuche, Gießhilfe, Trank-Duell, Gilden-UI.
+    PlayerInteraction.lua — Player Interactions (STUB)
+    Garden visits, watering help, potion duel, guild UI.
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -12,76 +12,76 @@ local PlayerInteraction = {}
 local player = Players.LocalPlayer
 
 -- ============================================================
--- TODO: GARTENBESUCHE
+-- TODO: GARDEN VISITS
 -- ============================================================
--- [ ] Spielerliste: Online-Spieler mit "Garten besuchen" Button
--- [ ] Teleport zum Garten des anderen Spielers
--- [ ] Besuchs-Modus: Kamera zeigt den fremden Garten
--- [ ] "Gefällt mir" Button (+Coins für Besitzer)
--- [ ] Pflanzen-Hovern: Info-Popup (Name, Qualität, Traits)
--- [ ] "Gießhilfe" Button bei nicht-gegossenen Pflanzen
--- [ ] Gießen-Animation + XP-Bonus für beide Spieler
--- [ ] Gästebuch: Nachrichten hinterlassen (moderiert!)
--- [ ] "Zurück zu meinem Garten" Button
--- [ ] Top-Gärten der Woche: Showcase-Leaderboard
+-- [ ] Player list: Online players with "Visit garden" button
+-- [ ] Teleport to the other player's garden
+-- [ ] Visit mode: Camera shows the other player's garden
+-- [ ] "Like" button (+coins for owner)
+-- [ ] Plant hover: Info popup (name, quality, traits)
+-- [ ] "Watering help" button for unwatered plants
+-- [ ] Watering animation + XP bonus for both players
+-- [ ] Guestbook: Leave messages (moderated!)
+-- [ ] "Back to my garden" button
+-- [ ] Top gardens of the week: Showcase leaderboard
 
 -- ============================================================
--- TODO: TRANK-DUELL
+-- TODO: POTION DUEL
 -- ============================================================
--- [ ] Duell-Challenge senden: Spieler auswählen + Trank wählen
--- [ ] Duell-Anfrage-Popup beim Gegner
--- [ ] Duell-Arena: Kleiner Parcours/Plattform
--- [ ] Countdown (3... 2... 1... LOS!)
--- [ ] Effekt-spezifische Mini-Challenges:
---     - Sprungtrank → Wer erreicht die höchste Plattform?
---     - Speedtrank → Wer ist schneller im Parcours?
---     - Riesenwuchs → Wer ist am größten? (Purity bestimmt Größe)
---     - Flugessenz → Wer sammelt mehr Sterne in der Luft?
---     - Unsichtbarkeitstrank → Versteckspiel (wer findet den anderen?)
--- [ ] Ergebnis-Screen: Gewinner + Coins + Rep
--- [ ] Duell-Statistik (Siege/Niederlagen)
+-- [ ] Send duel challenge: Select player + choose potion
+-- [ ] Duel request popup for the opponent
+-- [ ] Duel arena: Small obstacle course/platform
+-- [ ] Countdown (3... 2... 1... GO!)
+-- [ ] Effect-specific mini-challenges:
+--     - Jump potion → Who reaches the highest platform?
+--     - Speed potion → Who is faster in the obstacle course?
+--     - Giant growth → Who is the tallest? (Purity determines size)
+--     - Flight essence → Who collects more stars in the air?
+--     - Invisibility potion → Hide and seek (who finds the other?)
+-- [ ] Result screen: Winner + coins + rep
+-- [ ] Duel statistics (wins/losses)
 
 -- ============================================================
--- TODO: GILDEN / ALCHEMISTEN-ZIRKEL
+-- TODO: GUILDS / ALCHEMIST CIRCLE
 -- ============================================================
--- [ ] Gilden-Erstellung: Name + Icon wählen (ab Level 12)
--- [ ] Gilden-Beitritt: Liste offener Gilden + Einladungen
--- [ ] Gilden-Übersicht: Mitglieder, Rang, Beiträge
--- [ ] Gemeinsamer Garten: Extra-Plot mit Gilden-Mitgliedern
--- [ ] Gilden-Labor: Gruppen-Brauen UI (mehrere Spieler gleichzeitig)
--- [ ] Gilden-Aufträge: Große NPC-Aufträge die alle bearbeiten
--- [ ] Gilden-Chat
--- [ ] Gilden-Wettbewerbe: Gilde vs. Gilde Scoreboard
--- [ ] Rollen: Anführer, Offizier, Mitglied
+-- [ ] Guild creation: Choose name + icon (from level 12)
+-- [ ] Guild joining: List of open guilds + invitations
+-- [ ] Guild overview: Members, rank, contributions
+-- [ ] Shared garden: Extra plot with guild members
+-- [ ] Guild lab: Group brewing UI (multiple players simultaneously)
+-- [ ] Guild orders: Large NPC orders that everyone works on
+-- [ ] Guild chat
+-- [ ] Guild competitions: Guild vs. guild scoreboard
+-- [ ] Roles: Leader, Officer, Member
 
 -- ============================================================
--- TODO: TÄGLICHE HERAUSFORDERUNGEN
+-- TODO: DAILY CHALLENGES
 -- ============================================================
--- [ ] Community-Challenge Banner oben im Screen
--- [ ] Fortschrittsbalken (server-weiter Fortschritt)
--- [ ] Eigener Beitrag anzeigen
--- [ ] Belohnungs-Vorschau
--- [ ] Challenge-Typen:
---     - "Community braut 1000 Tränke"
---     - "Finde die Geheim-Mutation des Tages"
---     - "1000 Pflanzen ernten"
---     - "Höchste Reinheit des Tages"
--- [ ] Rangliste: Top-Beiträger
+-- [ ] Community challenge banner at the top of the screen
+-- [ ] Progress bar (server-wide progress)
+-- [ ] Show own contribution
+-- [ ] Reward preview
+-- [ ] Challenge types:
+--     - "Community brews 1000 potions"
+--     - "Find the secret mutation of the day"
+--     - "Harvest 1000 plants"
+--     - "Highest purity of the day"
+-- [ ] Leaderboard: Top contributors
 
 -- ============================================================
--- TODO: TRANK-KONSUM
+-- TODO: POTION CONSUMPTION
 -- ============================================================
--- [ ] "Trinken" Button im Inventar / Quick-Bar
--- [ ] Trink-Animation (Fläschchen an den Mund)
--- [ ] Effekt-Overlay: Buff-Icon + Timer in der HUD-Ecke
--- [ ] Visuelle Effekte pro Trank:
---     - Sprungtrank: Grüne Partikel an den Füßen
---     - Glühtrank: Spieler leuchtet
---     - Speedtrank: Geschwindigkeitslinien
---     - Unsichtbarkeitstrank: Transparenz-Übergang
---     - Flugessenz: Flügel-Partikel
---     - Riesenwuchs: Größen-Skalierung
--- [ ] Buff-Ende-Warnung (5s vorher: "Effekt läuft gleich ab!")
+-- [ ] "Drink" button in inventory / quick bar
+-- [ ] Drinking animation (vial to the mouth)
+-- [ ] Effect overlay: Buff icon + timer in the HUD corner
+-- [ ] Visual effects per potion:
+--     - Jump potion: Green particles at the feet
+--     - Glow potion: Player glows
+--     - Speed potion: Speed lines
+--     - Invisibility potion: Transparency transition
+--     - Flight essence: Wing particles
+--     - Giant growth: Size scaling
+-- [ ] Buff expiration warning (5s before: "Effect is about to expire!")
 
 -- Placeholder initialization
 function PlayerInteraction.Init()

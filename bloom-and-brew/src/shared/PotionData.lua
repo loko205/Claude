@@ -1,7 +1,7 @@
 --[[
-    PotionData.lua — Trankrezepte, Effekte & Reinheitsberechnung
-    Tränke werden aus EXTRAKTEN gebraut (nicht rohe Pflanzen!).
-    Pipeline: Pflanze → Verarbeitung → Extrakt → Brau-Labor → Trank
+    PotionData.lua — Potion recipes, effects & purity calculation
+    Potions are brewed from EXTRACTS (not raw plants!).
+    Pipeline: Plant → Processing → Extract → Brew Lab → Potion
 ]]
 
 local Config = require(script.Parent.Config)
@@ -9,18 +9,18 @@ local Config = require(script.Parent.Config)
 local PotionData = {}
 
 -- ============================================================
--- TRANKREZEPTE
--- Zutaten sind Extrakt-IDs (= PlantId, da 1 Pflanze → 1 Extrakttyp)
+-- POTION RECIPES
+-- Ingredients are extract IDs (= PlantId, since 1 plant → 1 extract type)
 -- ============================================================
 
 PotionData.Potions = {
 
-    -- ======== STARTER-TRÄNKE (Level 3+) ========
+    -- ======== STARTER POTIONS (Level 3+) ========
 
     sprungtrank = {
         Id = "sprungtrank",
-        Name = "Sprungtrank",
-        Desc = "Trink das und spring wie ein Känguru auf Energy-Drink!",
+        Name = "Jump Potion",
+        Desc = "Drink this and bounce like a kangaroo on energy drinks!",
         Tier = "Starter",
         LevelReq = 3,
         Ingredients = {
@@ -30,15 +30,15 @@ PotionData.Potions = {
         BaseValue = 25,
         Effect = {
             Type = "JumpBoost",
-            Strength = 3.0,       -- 3x Sprunghöhe
-            BaseDuration = 60,    -- 60 Sekunden
+            Strength = 3.0,       -- 3x jump height
+            BaseDuration = 60,    -- 60 seconds
         },
     },
 
     gluehtrank = {
         Id = "gluehtrank",
-        Name = "Glühtrank",
-        Desc = "Du leuchtest wie eine Discokugel. Party wherever you go!",
+        Name = "Glow Potion",
+        Desc = "You glow like a disco ball. Party wherever you go!",
         Tier = "Starter",
         LevelReq = 3,
         Ingredients = {
@@ -56,8 +56,8 @@ PotionData.Potions = {
 
     nebeltrank = {
         Id = "nebeltrank",
-        Name = "Nebeltrank",
-        Desc = "Macht dich halbtransparent. Perfekt um peinlichen Begegnungen auszuweichen.",
+        Name = "Mist Potion",
+        Desc = "Makes you semi-transparent. Perfect for dodging awkward encounters.",
         Tier = "Starter",
         LevelReq = 3,
         Ingredients = {
@@ -74,8 +74,8 @@ PotionData.Potions = {
 
     speedtrank = {
         Id = "speedtrank",
-        Name = "Speedtrank",
-        Desc = "ZOOOOM! Alles wird unscharf. Bäume? Welche Bäume?",
+        Name = "Speed Potion",
+        Desc = "ZOOOOM! Everything goes blurry. Trees? What trees?",
         Tier = "Starter",
         LevelReq = 3,
         Ingredients = {
@@ -86,18 +86,18 @@ PotionData.Potions = {
         BaseValue = 40,
         Effect = {
             Type = "SpeedBoost",
-            Strength = 1.5,        -- +50% Speed
+            Strength = 1.5,        -- +50% speed
             BaseDuration = 60,
         },
     },
 
-    -- ======== FORTGESCHRITTENE TRÄNKE (Level 8+) ========
+    -- ======== ADVANCED POTIONS (Level 8+) ========
 
     unsichtbarkeitstrank = {
         Id = "unsichtbarkeitstrank",
-        Name = "Unsichtbarkeitstrank",
-        Desc = "Poof! Weg bist du. Aber bitte nicht im Unterricht trinken.",
-        Tier = "Fortgeschritten",
+        Name = "Invisibility Potion",
+        Desc = "Poof! Gone. But please don't drink this during class.",
+        Tier = "Advanced",
         LevelReq = 8,
         Ingredients = {
             { ExtractFrom = "nebelranke", Amount = 2 },
@@ -114,9 +114,9 @@ PotionData.Potions = {
 
     flugessenz = {
         Id = "flugessenz",
-        Name = "Flugessenz",
-        Desc = "Fliegen! Wie ein Vogel! Nur ohne Federn und mit mehr 'WAAAH!'",
-        Tier = "Fortgeschritten",
+        Name = "Flight Essence",
+        Desc = "Fly! Like a bird! Only without feathers and with more 'WAAAH!'",
+        Tier = "Advanced",
         LevelReq = 8,
         Ingredients = {
             { ExtractFrom = "sternmoos", Amount = 1 },
@@ -134,9 +134,9 @@ PotionData.Potions = {
 
     riesenwuchs = {
         Id = "riesenwuchs",
-        Name = "Riesenwuchs-Trank",
-        Desc = "FEE-FI-FO-FUM! Du bist jetzt groß. Richtig groß. Türen sind dein Feind.",
-        Tier = "Fortgeschritten",
+        Name = "Giant Growth Potion",
+        Desc = "FEE-FI-FO-FUM! You're big now. Really big. Doors are your enemy.",
+        Tier = "Advanced",
         LevelReq = 8,
         Ingredients = {
             { ExtractFrom = "sternmoos", Amount = 2 },
@@ -146,16 +146,16 @@ PotionData.Potions = {
         BaseValue = 180,
         Effect = {
             Type = "SizeBoost",
-            Strength = 3.0,        -- 3x Größe
+            Strength = 3.0,        -- 3x size
             BaseDuration = 60,
         },
     },
 
     magnetischer_trank = {
         Id = "magnetischer_trank",
-        Name = "Magnetischer Trank",
-        Desc = "Coins und Drops fliegen auf dich zu wie Motten zum Licht. Cha-ching!",
-        Tier = "Fortgeschritten",
+        Name = "Magnet Potion",
+        Desc = "Coins and drops fly toward you like moths to a flame. Cha-ching!",
+        Tier = "Advanced",
         LevelReq = 8,
         Ingredients = {
             { ExtractFrom = "irrlichtwurzel", Amount = 1 },
@@ -165,18 +165,18 @@ PotionData.Potions = {
         BaseValue = 120,
         Effect = {
             Type = "Magnet",
-            Strength = 30,          -- Radius in Studs
+            Strength = 30,          -- Radius in studs
             BaseDuration = 120,
         },
     },
 
-    -- ======== SELTENE TRÄNKE (Level 15+) ========
+    -- ======== RARE POTIONS (Level 15+) ========
 
     teleportations_elixier = {
         Id = "teleportations_elixier",
-        Name = "Teleportations-Elixier",
-        Desc = "Hier sein, dort sein — Quantenphysik für Anfänger!",
-        Tier = "Selten",
+        Name = "Teleportation Elixir",
+        Desc = "Be here, be there — quantum physics for beginners!",
+        Tier = "Rare",
         LevelReq = 15,
         Ingredients = {
             { ExtractFrom = "voidfarn", Amount = 1 },
@@ -186,16 +186,16 @@ PotionData.Potions = {
         BaseValue = 500,
         Effect = {
             Type = "Teleport",
-            Strength = 1,           -- 1x Nutzung
+            Strength = 1,           -- 1x use
             BaseDuration = 0,       -- Instant
         },
     },
 
     zeittrank = {
         Id = "zeittrank",
-        Name = "Zeittrank",
-        Desc = "Die Zeit fliegt... und deine Pflanzen wachsen doppelt so schnell. Tic-Toc!",
-        Tier = "Selten",
+        Name = "Time Potion",
+        Desc = "Time flies... and your plants grow twice as fast. Tick-tock!",
+        Tier = "Rare",
         LevelReq = 15,
         Ingredients = {
             { ExtractFrom = "zeitlotus", Amount = 1 },
@@ -205,16 +205,16 @@ PotionData.Potions = {
         BaseValue = 800,
         Effect = {
             Type = "GrowthBoost",
-            Strength = 2.0,         -- 2x Wachstum
-            BaseDuration = 300,     -- 5 Minuten
+            Strength = 2.0,         -- 2x growth
+            BaseDuration = 300,     -- 5 minutes
         },
     },
 
     phoenixtraene = {
         Id = "phoenixtraene",
-        Name = "Phönixträne",
-        Desc = "Ein zweites Leben! Naja, eher ein zweiter Versuch. Immer noch krass.",
-        Tier = "Selten",
+        Name = "Phoenix Tear",
+        Desc = "A second life! Well, more like a second chance. Still awesome though.",
+        Tier = "Rare",
         LevelReq = 15,
         Ingredients = {
             { ExtractFrom = "phoenixkelch", Amount = 1 },
@@ -225,18 +225,18 @@ PotionData.Potions = {
         Effect = {
             Type = "Revive",
             Strength = 1,
-            BaseDuration = 0,       -- Passive bis verbraucht
+            BaseDuration = 0,       -- Passive until consumed
         },
     },
 
     chaostrank = {
         Id = "chaostrank",
-        Name = "Chaostrank",
-        Desc = "Was passiert? KEINER WEISS ES! Könnte super werden. Könnte... interessant werden.",
-        Tier = "Selten",
+        Name = "Chaos Potion",
+        Desc = "What happens? NOBODY KNOWS! Could be amazing. Could be... interesting.",
+        Tier = "Rare",
         LevelReq = 15,
         Ingredients = {
-            -- 3x beliebige Epic+ Pflanzen (speziell behandelt in BrewingEngine)
+            -- 3x any Epic+ plants (specially handled in BrewingEngine)
             { ExtractFrom = "ANY_EPIC_PLUS", Amount = 3 },
         },
         BrewTime = 300,
@@ -246,16 +246,16 @@ PotionData.Potions = {
             Strength = 1.0,
             BaseDuration = 60,
         },
-        IsWildcard = true, -- Flag für BrewingEngine: akzeptiert beliebige Epic+ Extrakte
+        IsWildcard = true, -- Flag for BrewingEngine: accepts any Epic+ extracts
     },
 
-    -- ======== LEGENDÄRE TRÄNKE (Level 25+) ========
+    -- ======== LEGENDARY POTIONS (Level 25+) ========
 
     midas_elixier = {
         Id = "midas_elixier",
-        Name = "Midas-Elixier",
-        Desc = "Alles wird zu Gold! Naja, fast. Deine Ernten geben 5x Coins. DAS REICHT.",
-        Tier = "Legendaer",
+        Name = "Midas Elixir",
+        Desc = "Everything turns to gold! Well, almost. Your harvests yield 5x coins. GOOD ENOUGH.",
+        Tier = "Legendary",
         LevelReq = 25,
         Ingredients = {
             { ExtractFrom = "weltbaumsetzling", Amount = 1 },
@@ -265,16 +265,16 @@ PotionData.Potions = {
         BaseValue = 5000,
         Effect = {
             Type = "GoldTouch",
-            Strength = 5.0,         -- 5x Coins
+            Strength = 5.0,         -- 5x coins
             BaseDuration = 60,
         },
     },
 
     allwissender_trank = {
         Id = "allwissender_trank",
-        Name = "Allwissender Trank",
-        Desc = "Du siehst ALLES. Alle Rezepte. Alle Geheimnisse. Und ja, auch was der Nachbar anbaut.",
-        Tier = "Legendaer",
+        Name = "Omniscience Potion",
+        Desc = "You see EVERYTHING. All recipes. All secrets. And yes, even what your neighbor is growing.",
+        Tier = "Legendary",
         LevelReq = 25,
         Ingredients = {
             { ExtractFrom = "ewige_essenz", Amount = 1 },
@@ -285,19 +285,19 @@ PotionData.Potions = {
         Effect = {
             Type = "Omniscience",
             Strength = 1.0,
-            BaseDuration = 600,     -- 10 Minuten
+            BaseDuration = 600,     -- 10 minutes
         },
     },
 }
 
 -- ============================================================
--- REINHEITSBERECHNUNG
+-- PURITY CALCULATION
 -- ============================================================
 
 -- Calculate purity of a brewed potion
 -- extractPotencies: array of potency values (0-1) for each ingredient
 -- cauldronLevel: 1-5 (index into Config.Brewing.CauldronLevels)
--- minigameScore: 0-100 (from brau-minigame, 0 = auto-brew)
+-- minigameScore: 0-100 (from brew minigame, 0 = auto-brew)
 -- hasPotentTrait: bool (any ingredient had "Potent" trait)
 function PotionData.CalculatePurity(extractPotencies, cauldronLevel, minigameScore, hasPotentTrait)
     local weights = Config.Brewing.PurityWeights
@@ -352,7 +352,7 @@ function PotionData.GetPurityTier(purity)
             return tier
         end
     end
-    return Config.Brewing.PurityTiers[1] -- Fallback: Verdünnt
+    return Config.Brewing.PurityTiers[1] -- Fallback: Diluted
 end
 
 -- Calculate actual potion value based on base value and purity
@@ -386,7 +386,7 @@ function PotionData.GetEffectStrength(potionId, purity)
 end
 
 -- ============================================================
--- HILFSFUNKTIONEN
+-- HELPER FUNCTIONS
 -- ============================================================
 
 function PotionData.GetPotion(potionId)
@@ -415,10 +415,10 @@ end
 -- inventory: { [extractId] = amount }
 function PotionData.CanBrew(potionId, inventory, playerLevel)
     local potion = PotionData.Potions[potionId]
-    if not potion then return false, "Unbekannter Trank" end
+    if not potion then return false, "Unknown potion" end
 
     if playerLevel < potion.LevelReq then
-        return false, "Level " .. potion.LevelReq .. " benötigt"
+        return false, "Level " .. potion.LevelReq .. " required"
     end
 
     for _, ingredient in ipairs(potion.Ingredients) do
@@ -430,12 +430,12 @@ function PotionData.CanBrew(potionId, inventory, playerLevel)
                 epicCount = epicCount + amount
             end
             if epicCount < ingredient.Amount then
-                return false, "Nicht genug Epic+ Extrakte"
+                return false, "Not enough Epic+ extracts"
             end
         else
             local have = inventory[ingredient.ExtractFrom] or 0
             if have < ingredient.Amount then
-                return false, "Nicht genug " .. ingredient.ExtractFrom
+                return false, "Not enough " .. ingredient.ExtractFrom
             end
         end
     end
@@ -451,9 +451,9 @@ function PotionData.GetEssenceReward(potionId)
     -- Map tier to rarity for essence calculation
     local tierToRarity = {
         Starter = "Common",
-        Fortgeschritten = "Uncommon",
-        Selten = "Rare",
-        Legendaer = "Legendary",
+        Advanced = "Uncommon",
+        Rare = "Rare",
+        Legendary = "Legendary",
     }
 
     local rarity = tierToRarity[potion.Tier] or "Common"

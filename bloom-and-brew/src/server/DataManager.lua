@@ -1,7 +1,7 @@
 --[[
-    DataManager.lua — DataStore Persistenz, Auto-Save, Session-Lock
-    Verwaltet alle Spielerdaten serverseitig.
-    KEINE Spiellogik hier — nur Laden, Speichern, Schema-Defaults.
+    DataManager.lua — DataStore Persistence, Auto-Save, Session-Lock
+    Manages all player data server-side.
+    NO game logic here — only Load, Save, Schema-Defaults.
 ]]
 
 local Players = game:GetService("Players")
@@ -23,7 +23,7 @@ local dataStore = DataStoreService:GetDataStore(Config.Technical.DataStoreKey)
 
 local function getDefaultData()
     return {
-        -- Profil
+        -- Profile
         Level = 1,
         XP = 0,
         Coins = Config.Economy.StartCoins,
@@ -32,7 +32,7 @@ local function getDefaultData()
         Reputation = 0,
         DealerReputation = 0,
 
-        -- Garten
+        -- Garden
         Plots = {
             [1] = {
                 Level = 1,
@@ -42,43 +42,43 @@ local function getDefaultData()
             },
         },
 
-        -- Labor
+        -- Lab
         Lab = {
             CauldronLevel = 1,
             ActiveBrew = nil, -- { PotionId, StartTime, Extracts, MinigameInputs }
             RecipesDiscovered = {},
         },
 
-        -- Verarbeitung (NEU)
+        -- Processing
         Processing = {
             Machines = {}, -- { [methodId] = { Owned = bool, Level = 1-3 } }
             ActiveProcessing = {}, -- { PlantId, Method, StartTime, SlotIndex }
         },
 
-        -- Inventar
+        -- Inventory
         Inventory = {
             Seeds = {},      -- { [plantId] = amount }
             Plants = {},     -- { [index] = { PlantId, Quality, Traits } }
             Catalysts = {},  -- { [catalystId] = amount }
-            Extracts = {},   -- { [plantId] = { Amount, Potency } } (NEU)
+            Extracts = {},   -- { [plantId] = { Amount, Potency } }
             Potions = {},    -- { [index] = { PotionId, Purity, Quality, Traits, BrewedAt } }
             Tools = {},
         },
 
-        -- Sammelalbum
+        -- Collection album
         Plantdex = {},   -- { [plantId] = true }
         Potiondex = {},  -- { [potionId] = true }
 
-        -- NPC-Kunden
+        -- NPC Customers
         Customers = {
             ActiveOrders = {},    -- { [index] = order }
             CompletedOrders = 0,  -- Counter only (DataStore size!)
         },
 
-        -- Spieler-Handel
+        -- Player Trading
         Trade = {
             DealerRep = 0,
-            DealerRank = "Lehrling",
+            DealerRank = "Apprentice",
             TotalSales = 0,
             StandSlots = 3,
             StandOffers = {},      -- { [index] = { PotionIndex, Price, ListedAt } }
@@ -88,7 +88,7 @@ local function getDefaultData()
             TrustScores = {},      -- { [userId] = trustScore }
         },
 
-        -- Gilde
+        -- Guild
         Guild = {
             GuildId = nil,
             Role = nil,

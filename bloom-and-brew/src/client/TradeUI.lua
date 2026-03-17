@@ -1,6 +1,6 @@
 --[[
-    TradeUI.lua — Handel-Interface (STUB)
-    Direkthandel, Schwarzes Brett, Auktionshaus, Trankstand.
+    TradeUI.lua — Trade Interface (STUB)
+    Direct trade, bulletin board, auction house, potion stand.
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -13,58 +13,58 @@ local TradeUI = {}
 local player = Players.LocalPlayer
 
 -- ============================================================
--- TODO: DIREKTHANDEL (P2P Trade Window)
+-- TODO: DIRECT TRADE (P2P Trade Window)
 -- ============================================================
--- [ ] Trade-Request-Popup ("Spieler X möchte handeln!")
--- [ ] Geteiltes Trade-Window: Links = Meine Items, Rechts = Andere Items
--- [ ] Drag & Drop: Items aus Inventar ins Trade-Fenster ziehen
--- [ ] Coins-Feld: Manuell Coins-Betrag eingeben
--- [ ] Bestätigungs-Buttons: "Bestätigen" (grün) / "Abbrechen" (rot)
--- [ ] 10s Anti-Scam-Countdown nach Bestätigung (großer Timer)
--- [ ] Änderungen nach Confirm resetten den Timer (Warnung!)
--- [ ] Vertrauens-Anzeige: Trust-Level zum anderen Spieler
+-- [ ] Trade request popup ("Player X wants to trade!")
+-- [ ] Split trade window: Left = My items, Right = Other items
+-- [ ] Drag & drop: Drag items from inventory into trade window
+-- [ ] Coins field: Manually enter coin amount
+-- [ ] Confirmation buttons: "Confirm" (green) / "Cancel" (red)
+-- [ ] 10s anti-scam countdown after confirmation (large timer)
+-- [ ] Changes after confirm reset the timer (warning!)
+-- [ ] Trust display: Trust level with the other player
 
 -- ============================================================
--- TODO: TRANKSTAND
+-- TODO: POTION STAND
 -- ============================================================
--- [ ] Stand als 3D-Objekt vor dem Garten des Spielers
--- [ ] Stand-Design basierend auf Dealer-Rang (Einfach → Luxus)
--- [ ] Angebots-Slots mit Trank-Icons + Preis
--- [ ] "Einstellen"-Dialog: Trank auswählen, Preis festlegen
--- [ ] Besucher-Ansicht: Angebote des anderen Spielers sehen + "Kaufen"
--- [ ] Dealer-Rang-Badge über dem Stand
--- [ ] Stammkunden-Badge bei Lieblings-Verkäufern
+-- [ ] Stand as 3D object in front of the player's garden
+-- [ ] Stand design based on dealer rank (Basic → Luxury)
+-- [ ] Offer slots with potion icons + price
+-- [ ] "List item" dialog: Select potion, set price
+-- [ ] Visitor view: See other player's offers + "Buy"
+-- [ ] Dealer rank badge above the stand
+-- [ ] Regular customer badge for favorite sellers
 
 -- ============================================================
--- TODO: SCHWARZES BRETT (Marktplatz)
+-- TODO: BULLETIN BOARD (Marketplace)
 -- ============================================================
--- [ ] Brett-UI als scrollbare Liste
--- [ ] Filter: Typ (Pflanze/Trank), Reinheit, Preis, Rarität
--- [ ] Sortierung: Neueste, Preis (auf/ab), Reinheit, Rarität
--- [ ] Geheime Angebote: Sichtbar ab Rep 1000, goldener Rahmen
--- [ ] "Kaufen"-Button + Bestätigungs-Dialog
--- [ ] "Eigene Angebote verwalten" Tab
--- [ ] "Angebot einstellen" Dialog
--- [ ] Stammkunden-Rabatt automatisch anzeigen ("-10%")
+-- [ ] Board UI as scrollable list
+-- [ ] Filter: Type (Plant/Potion), purity, price, rarity
+-- [ ] Sorting: Newest, price (asc/desc), purity, rarity
+-- [ ] Secret offers: Visible from rep 1000, golden frame
+-- [ ] "Buy" button + confirmation dialog
+-- [ ] "Manage own offers" tab
+-- [ ] "List offer" dialog
+-- [ ] Regular customer discount auto-display ("-10%")
 
 -- ============================================================
--- TODO: AUKTIONSHAUS
+-- TODO: AUCTION HOUSE
 -- ============================================================
--- [ ] Premium-UI mit goldener Umrandung
--- [ ] Aktive Auktionen als Karten (Item-Bild, aktuelles Gebot, Timer)
--- [ ] "Gebot abgeben" Dialog (mit Min-Gebot-Anzeige)
--- [ ] "Sofortkauf" Button (wenn Buyout-Preis gesetzt)
--- [ ] Eigene Auktionen verwalten
--- [ ] "Neue Auktion" Dialog: Item wählen, Mindestgebot, Dauer, Buyout
--- [ ] Gebotshistorie pro Auktion
+-- [ ] Premium UI with golden border
+-- [ ] Active auctions as cards (item image, current bid, timer)
+-- [ ] "Place bid" dialog (with minimum bid display)
+-- [ ] "Buy now" button (if buyout price is set)
+-- [ ] Manage own auctions
+-- [ ] "New auction" dialog: Choose item, minimum bid, duration, buyout
+-- [ ] Bid history per auction
 
 -- ============================================================
--- TODO: DEALER-RANG-ANZEIGE
+-- TODO: DEALER RANK DISPLAY
 -- ============================================================
--- [ ] Rang über dem Kopf des Spielers (Billboard GUI)
--- [ ] Rang-Farbe: Lehrling=Grau, Alchemist=Grün, Meisterbrauer=Blau, etc.
--- [ ] Aura-Effekt ab "Meisterbrauer"
--- [ ] Leuchtender Name ab "Großmeister"
+-- [ ] Rank above the player's head (Billboard GUI)
+-- [ ] Rank color: Apprentice=Gray, Alchemist=Green, Master Brewer=Blue, etc.
+-- [ ] Aura effect from "Master Brewer" onward
+-- [ ] Glowing name from "Grand Master" onward
 
 -- Placeholder initialization
 function TradeUI.Init()
