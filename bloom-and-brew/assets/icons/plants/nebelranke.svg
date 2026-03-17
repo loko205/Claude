@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Nebel-Gradient -->
+    <radialGradient id="fogAura" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#80DEEA" stop-opacity="0.12"/>
+      <stop offset="60%" stop-color="#B0BEC5" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#B0BEC5" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Blatt halbtransparent blasslila-blau -->
+    <linearGradient id="ghostLeaf" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#B0BEC5" stop-opacity="0.7"/>
+      <stop offset="40%" stop-color="#80DEEA" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#CE93D8" stop-opacity="0.4"/>
+    </linearGradient>
+    <linearGradient id="ghostLeafAlt" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#CE93D8" stop-opacity="0.6"/>
+      <stop offset="40%" stop-color="#80DEEA" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#B0BEC5" stop-opacity="0.35"/>
+    </linearGradient>
+    <!-- Ranken-Gradient -->
+    <linearGradient id="vineGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#80CBC4" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#4DB6AC" stop-opacity="0.5"/>
+    </linearGradient>
+    <!-- Nebelschwaden -->
+    <filter id="fogBlur">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+    <filter id="fogBlurLight">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+    <!-- Geisterhafter Glow -->
+    <filter id="ghostGlow">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <!-- Verschwommene Konturen -->
+    <filter id="edgeFade">
+      <feGaussianBlur stdDeviation="2"/>
+    </filter>
+    <!-- Rahmen -->
+    <linearGradient id="frameGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F0F0F0"/>
+      <stop offset="50%" stop-color="#E0E0E0"/>
+      <stop offset="100%" stop-color="#D0D0D0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Hintergrund (kühles Dunkelgrau-Blau) -->
+  <rect width="512" height="512" rx="24" fill="#1C2126"/>
+
+  <!-- Nebel-Atmosphäre -->
+  <circle cx="256" cy="260" r="200" fill="url(#fogAura)"/>
+
+  <!-- === NEBELSCHWADEN (Hintergrund) === -->
+  <ellipse cx="200" cy="320" rx="120" ry="35" fill="#B0BEC5" opacity="0.08" filter="url(#fogBlur)"/>
+  <ellipse cx="310" cy="260" rx="100" ry="30" fill="#80DEEA" opacity="0.06" filter="url(#fogBlur)"/>
+  <ellipse cx="240" cy="200" rx="90" ry="25" fill="#CE93D8" opacity="0.05" filter="url(#fogBlur)"/>
+
+  <!-- Schatten (diffus, schwebt) -->
+  <ellipse cx="256" cy="430" rx="70" ry="10" fill="#0D1215" opacity="0.3" filter="url(#fogBlurLight)"/>
+
+  <!-- === RANKEN (Spiralform) === -->
+
+  <!-- Haupt-Ranke (Spirale aufwärts) -->
+  <path d="M256 420 Q260 400 250 375 Q240 350 260 330 Q280 310 265 285
+           Q250 260 270 240 Q290 220 272 200 Q255 180 268 160"
+        stroke="url(#vineGrad)" stroke-width="7" fill="none" stroke-linecap="round" opacity="0.8"/>
+
+  <!-- Neben-Ranke links -->
+  <path d="M250 375 Q220 355 195 345 Q170 338 160 320 Q155 305 168 295"
+        stroke="url(#vineGrad)" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.65"/>
+
+  <!-- Neben-Ranke rechts -->
+  <path d="M265 285 Q295 270 318 258 Q340 248 348 232 Q352 218 340 210"
+        stroke="url(#vineGrad)" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.65"/>
+
+  <!-- Kleine Ranke links oben -->
+  <path d="M270 240 Q240 225 218 215 Q198 208 192 195"
+        stroke="url(#vineGrad)" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.55"/>
+
+  <!-- Kleine Ranke rechts oben -->
+  <path d="M272 200 Q295 190 310 180 Q325 172 328 160"
+        stroke="url(#vineGrad)" stroke-width="3.5" fill="none" stroke-linecap="round" opacity="0.5"/>
+
+  <!-- === BLÄTTER (halbtransparent, verschwimmend) === -->
+
+  <!-- Blatt 1 — links unten -->
+  <path d="M168 295 Q148 278 138 255 Q134 242 140 235 Q148 232 155 240
+           Q165 255 172 278 Q174 288 170 293 Z"
+        fill="url(#ghostLeaf)" stroke="#80DEEA" stroke-width="0.8" opacity="0.7"/>
+  <!-- Verschwimmender Rand -->
+  <path d="M138 255 Q134 242 140 235" stroke="#80DEEA" stroke-width="3" fill="none" opacity="0.15" filter="url(#edgeFade)"/>
+
+  <!-- Blatt 2 — rechts Mitte -->
+  <path d="M340 210 Q358 195 365 175 Q368 160 360 155 Q352 153 346 162
+           Q338 175 335 195 Q334 205 338 210 Z"
+        fill="url(#ghostLeafAlt)" stroke="#CE93D8" stroke-width="0.8" opacity="0.65"/>
+  <path d="M365 175 Q368 160 360 155" stroke="#CE93D8" stroke-width="3" fill="none" opacity="0.12" filter="url(#edgeFade)"/>
+
+  <!-- Blatt 3 — links oben -->
+  <path d="M192 195 Q175 180 168 162 Q165 150 172 145 Q180 143 184 152
+           Q190 165 192 182 Q193 190 192 195 Z"
+        fill="url(#ghostLeaf)" stroke="#80DEEA" stroke-width="0.8" opacity="0.6"/>
+  <path d="M168 162 Q165 150 172 145" stroke="#80DEEA" stroke-width="2.5" fill="none" opacity="0.12" filter="url(#edgeFade)"/>
+
+  <!-- Blatt 4 — rechts oben -->
+  <path d="M328 160 Q340 148 345 132 Q347 120 340 116 Q333 115 330 124
+           Q326 136 326 150 Q327 157 328 160 Z"
+        fill="url(#ghostLeafAlt)" stroke="#CE93D8" stroke-width="0.8" opacity="0.55"/>
+
+  <!-- Blatt 5 — Spitze oben -->
+  <path d="M268 160 Q262 142 260 125 Q259 112 264 108 Q270 106 273 114
+           Q276 128 274 148 Q272 155 270 160 Z"
+        fill="url(#ghostLeaf)" stroke="#80DEEA" stroke-width="0.8" opacity="0.65"/>
+
+  <!-- === NEBELSCHWADEN um die Ranken === -->
+  <g filter="url(#fogBlurLight)">
+    <!-- Schwaden die sich um die Spirale winden -->
+    <ellipse cx="245" cy="360" rx="45" ry="15" fill="#B0BEC5" opacity="0.12" transform="rotate(-15 245 360)"/>
+    <ellipse cx="275" cy="300" rx="50" ry="12" fill="#80DEEA" opacity="0.1" transform="rotate(10 275 300)"/>
+    <ellipse cx="260" cy="235" rx="40" ry="12" fill="#CE93D8" opacity="0.08" transform="rotate(-8 260 235)"/>
+    <ellipse cx="270" cy="180" rx="35" ry="10" fill="#B0BEC5" opacity="0.1" transform="rotate(12 270 180)"/>
+    <ellipse cx="265" cy="150" rx="30" ry="8" fill="#80DEEA" opacity="0.07" transform="rotate(-5 265 150)"/>
+  </g>
+
+  <!-- === LEUCHTPUNKTE (pulsierend wirkend) === -->
+  <g filter="url(#ghostGlow)">
+    <circle cx="168" cy="295" r="4" fill="#80DEEA" opacity="0.5"/>
+    <circle cx="340" cy="210" r="3.5" fill="#CE93D8" opacity="0.45"/>
+    <circle cx="192" cy="195" r="3" fill="#80DEEA" opacity="0.4"/>
+    <circle cx="268" cy="160" r="3.5" fill="#B0BEC5" opacity="0.5"/>
+    <circle cx="328" cy="160" r="2.5" fill="#CE93D8" opacity="0.35"/>
+  </g>
+
+  <!-- Schwebender Boden-Effekt (kein fester Erdhügel) -->
+  <ellipse cx="256" cy="425" rx="40" ry="6" fill="#80DEEA" opacity="0.06" filter="url(#fogBlurLight)"/>
+
+  <!-- === RARITÄTS-RAHMEN (Common) === -->
+  <rect x="6" y="6" width="500" height="500" rx="20" fill="none"
+        stroke="url(#frameGrad)" stroke-width="6" opacity="0.9"/>
+  <rect x="10" y="10" width="492" height="492" rx="18" fill="none"
+        stroke="#F5F5F5" stroke-width="1" opacity="0.3"/>
+</svg>

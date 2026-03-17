@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Feuer-Gradient für Blätter -->
+    <linearGradient id="fireLeaf" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF8F00"/>
+      <stop offset="40%" stop-color="#FF5722"/>
+      <stop offset="80%" stop-color="#E64A19"/>
+      <stop offset="100%" stop-color="#D84315"/>
+    </linearGradient>
+    <!-- Hellere Blattvariante -->
+    <linearGradient id="fireLeafLight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFC107"/>
+      <stop offset="30%" stop-color="#FF9800"/>
+      <stop offset="70%" stop-color="#FF5722"/>
+      <stop offset="100%" stop-color="#E64A19"/>
+    </linearGradient>
+    <!-- Flammenrand-Gradient -->
+    <linearGradient id="flameEdge" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#FF5722"/>
+      <stop offset="50%" stop-color="#FFC107"/>
+      <stop offset="100%" stop-color="#FFEB3B"/>
+    </linearGradient>
+    <!-- Stiel verkohlt -->
+    <linearGradient id="charredStem" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#5D4037"/>
+      <stop offset="50%" stop-color="#4E342E"/>
+      <stop offset="100%" stop-color="#3E2723"/>
+    </linearGradient>
+    <!-- Glut-Glow -->
+    <filter id="emberGlow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <!-- Wärme-Aura -->
+    <radialGradient id="heatAura" cx="50%" cy="45%" r="45%">
+      <stop offset="0%" stop-color="#FF5722" stop-opacity="0.15"/>
+      <stop offset="60%" stop-color="#FF8F00" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#FF8F00" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Flammenspitzen-Filter -->
+    <filter id="flameTip">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <!-- Rahmen -->
+    <linearGradient id="frameGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F0F0F0"/>
+      <stop offset="50%" stop-color="#E0E0E0"/>
+      <stop offset="100%" stop-color="#D0D0D0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Hintergrund (warmes Dunkel) -->
+  <rect width="512" height="512" rx="24" fill="#2A1510"/>
+
+  <!-- Wärme-Atmosphäre -->
+  <circle cx="256" cy="230" r="220" fill="url(#heatAura)"/>
+
+  <!-- Schatten am Boden -->
+  <ellipse cx="256" cy="425" rx="95" ry="15" fill="#1A0A05" opacity="0.5"/>
+
+  <!-- === PFLANZE === -->
+
+  <!-- Hauptstiel (verkohlt) -->
+  <path d="M256 415 Q254 370 253 330 Q252 290 256 250" stroke="url(#charredStem)" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <!-- Verkohlte Textur auf Stiel -->
+  <path d="M253 380 L258 375" stroke="#3E2723" stroke-width="1.5" opacity="0.6"/>
+  <path d="M252 350 L259 347" stroke="#3E2723" stroke-width="1.5" opacity="0.5"/>
+  <path d="M254 320 L260 318" stroke="#3E2723" stroke-width="1" opacity="0.4"/>
+
+  <!-- Nebenstiele -->
+  <path d="M254 350 Q225 320 185 300" stroke="url(#charredStem)" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <path d="M255 310 Q285 280 330 265" stroke="url(#charredStem)" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <path d="M254 285 Q220 258 185 238" stroke="url(#charredStem)" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <path d="M256 265 Q280 245 315 230" stroke="url(#charredStem)" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <path d="M256 250 Q248 225 240 200" stroke="url(#charredStem)" stroke-width="4" fill="none" stroke-linecap="round"/>
+
+  <!-- Blatt 1 — links unten (breit, Flammenform) -->
+  <path d="M185 300 Q155 280 138 255 Q128 238 125 220 Q124 208 132 200
+           Q140 195 150 205 Q162 218 175 245 Q185 268 192 288 Z"
+        fill="url(#fireLeaf)" stroke="#D84315" stroke-width="1.2"/>
+  <!-- Flammenrand oben -->
+  <path d="M138 255 Q132 242 128 230 Q126 218 132 210" stroke="none" fill="url(#flameEdge)" opacity="0.7"
+        d="M138 255 Q130 240 127 225 Q125 212 130 205 Q135 210 133 225 Q134 240 140 255 Z"/>
+  <!-- Blattadern -->
+  <path d="M185 300 Q165 272 148 245" stroke="#E65100" stroke-width="1.2" fill="none" opacity="0.5"/>
+  <path d="M180 288 Q164 265 152 248" stroke="#E65100" stroke-width="0.8" fill="none" opacity="0.35"/>
+  <!-- Flammenspitze Glow -->
+  <circle cx="130" cy="208" r="6" fill="#FFC107" opacity="0.7" filter="url(#flameTip)"/>
+  <circle cx="130" cy="208" r="3" fill="#FFEB3B" opacity="0.9"/>
+
+  <!-- Blatt 2 — rechts Mitte (breit) -->
+  <path d="M330 265 Q358 245 372 218 Q380 200 378 185 Q375 173 365 170
+           Q355 170 348 182 Q338 198 325 225 Q318 245 320 258 Z"
+        fill="url(#fireLeafLight)" stroke="#E64A19" stroke-width="1.2"/>
+  <path d="M330 265 Q350 238 368 205" stroke="#E65100" stroke-width="1.2" fill="none" opacity="0.5"/>
+  <path d="M326 252 Q345 228 360 200" stroke="#E65100" stroke-width="0.8" fill="none" opacity="0.35"/>
+  <circle cx="375" cy="178" r="6" fill="#FFC107" opacity="0.7" filter="url(#flameTip)"/>
+  <circle cx="375" cy="178" r="3" fill="#FFEB3B" opacity="0.9"/>
+
+  <!-- Blatt 3 — links oben -->
+  <path d="M185 238 Q158 218 145 192 Q138 175 140 162 Q143 152 152 150
+           Q160 150 165 162 Q172 178 180 205 Q185 222 186 232 Z"
+        fill="url(#fireLeaf)" stroke="#D84315" stroke-width="1"/>
+  <path d="M185 238 Q165 210 150 183" stroke="#E65100" stroke-width="1" fill="none" opacity="0.45"/>
+  <circle cx="142" cy="158" r="5" fill="#FFC107" opacity="0.6" filter="url(#flameTip)"/>
+  <circle cx="142" cy="158" r="2.5" fill="#FFEB3B" opacity="0.8"/>
+
+  <!-- Blatt 4 — rechts oben -->
+  <path d="M315 230 Q335 210 342 185 Q346 168 342 158 Q336 150 328 155
+           Q320 162 312 185 Q308 205 310 222 Z"
+        fill="url(#fireLeafLight)" stroke="#E64A19" stroke-width="1"/>
+  <path d="M315 230 Q330 205 340 178" stroke="#E65100" stroke-width="1" fill="none" opacity="0.45"/>
+  <circle cx="343" cy="160" r="5" fill="#FFC107" opacity="0.6" filter="url(#flameTip)"/>
+  <circle cx="343" cy="160" r="2.5" fill="#FFEB3B" opacity="0.8"/>
+
+  <!-- Blatt 5 — oben Mitte -->
+  <path d="M240 200 Q230 172 228 148 Q227 130 232 120 Q238 114 245 118
+           Q250 125 250 148 Q248 172 245 192 Z"
+        fill="url(#fireLeaf)" stroke="#D84315" stroke-width="1"/>
+  <path d="M240 200 Q234 172 230 148" stroke="#E65100" stroke-width="0.8" fill="none" opacity="0.4"/>
+  <circle cx="232" cy="120" r="5" fill="#FFC107" opacity="0.7" filter="url(#flameTip)"/>
+  <circle cx="232" cy="120" r="2.5" fill="#FFEB3B" opacity="0.9"/>
+
+  <!-- === GLUTPARTIKEL === -->
+  <g filter="url(#emberGlow)">
+    <!-- Große Glutpartikel -->
+    <circle cx="145" cy="175" r="3" fill="#FFC107" opacity="0.8"/>
+    <circle cx="355" cy="150" r="2.5" fill="#FF9800" opacity="0.7"/>
+    <circle cx="225" cy="110" r="2.5" fill="#FFC107" opacity="0.6"/>
+    <circle cx="300" cy="140" r="2" fill="#FFEB3B" opacity="0.7"/>
+
+    <!-- Kleine aufsteigende Funken -->
+    <circle cx="160" cy="148" r="1.5" fill="#FFEB3B" opacity="0.5"/>
+    <circle cx="338" cy="135" r="1.5" fill="#FFC107" opacity="0.5"/>
+    <circle cx="240" cy="100" r="1.5" fill="#FF9800" opacity="0.4"/>
+    <circle cx="280" cy="125" r="1" fill="#FFEB3B" opacity="0.5"/>
+    <circle cx="195" cy="165" r="1" fill="#FFC107" opacity="0.4"/>
+    <circle cx="310" cy="155" r="1.5" fill="#FF9800" opacity="0.3"/>
+
+    <!-- Winzige Funken weit oben -->
+    <circle cx="210" cy="90" r="1" fill="#FFEB3B" opacity="0.3"/>
+    <circle cx="270" cy="105" r="1" fill="#FFC107" opacity="0.3"/>
+    <circle cx="175" cy="130" r="1" fill="#FFEB3B" opacity="0.25"/>
+  </g>
+
+  <!-- Erdhügel -->
+  <ellipse cx="256" cy="420" rx="55" ry="14" fill="#3E2723" opacity="0.7"/>
+  <ellipse cx="256" cy="418" rx="48" ry="10" fill="#4E342E" opacity="0.8"/>
+  <ellipse cx="256" cy="416" rx="40" ry="7" fill="#5D4037" opacity="0.6"/>
+
+  <!-- === RARITÄTS-RAHMEN (Common) === -->
+  <rect x="6" y="6" width="500" height="500" rx="20" fill="none"
+        stroke="url(#frameGrad)" stroke-width="6" opacity="0.9"/>
+  <rect x="10" y="10" width="492" height="492" rx="18" fill="none"
+        stroke="#F5F5F5" stroke-width="1" opacity="0.3"/>
+</svg>

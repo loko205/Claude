@@ -1,0 +1,164 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Dunkelviolett-Gradient für Blütenblätter -->
+    <linearGradient id="petalDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6A1B9A"/>
+      <stop offset="40%" stop-color="#4A148C"/>
+      <stop offset="80%" stop-color="#311B92"/>
+      <stop offset="100%" stop-color="#212121"/>
+    </linearGradient>
+    <linearGradient id="petalDark2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#880E4F"/>
+      <stop offset="40%" stop-color="#4A148C"/>
+      <stop offset="80%" stop-color="#311B92"/>
+      <stop offset="100%" stop-color="#1A1A1A"/>
+    </linearGradient>
+    <!-- Inneres Blütenblatt (etwas heller) -->
+    <linearGradient id="petalInner" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#7B1FA2"/>
+      <stop offset="50%" stop-color="#6A1B9A"/>
+      <stop offset="100%" stop-color="#4A148C"/>
+    </linearGradient>
+    <!-- Schwarzer Nebel aus Kelch -->
+    <radialGradient id="darkMist" cx="50%" cy="35%" r="35%">
+      <stop offset="0%" stop-color="#212121" stop-opacity="0.5"/>
+      <stop offset="50%" stop-color="#1A1A1A" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#121212" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Stiel nachtblau -->
+    <linearGradient id="nightStem" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#283593"/>
+      <stop offset="50%" stop-color="#1A237E"/>
+      <stop offset="100%" stop-color="#0D1470"/>
+    </linearGradient>
+    <!-- Dunkle Aura -->
+    <radialGradient id="darkAura" cx="50%" cy="40%" r="45%">
+      <stop offset="0%" stop-color="#4A148C" stop-opacity="0.12"/>
+      <stop offset="60%" stop-color="#1A237E" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Schatten-Filter -->
+    <filter id="darkGlow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="mistBlur">
+      <feGaussianBlur stdDeviation="10"/>
+    </filter>
+    <filter id="mistBlurLight">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+    <!-- Rahmen -->
+    <linearGradient id="frameGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F0F0F0"/>
+      <stop offset="50%" stop-color="#E0E0E0"/>
+      <stop offset="100%" stop-color="#D0D0D0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Hintergrund (tiefes Schwarz mit Violett-Hauch) -->
+  <rect width="512" height="512" rx="24" fill="#0D0A12"/>
+
+  <!-- Dunkle Aura -->
+  <circle cx="256" cy="240" r="200" fill="url(#darkAura)"/>
+
+  <!-- Schatten am Boden -->
+  <ellipse cx="256" cy="430" rx="90" ry="14" fill="#050308" opacity="0.6"/>
+
+  <!-- === STIEL (schlank, nachtblau, mit Dornen) === -->
+
+  <!-- Hauptstiel -->
+  <path d="M256 425 Q255 390 254 355 Q253 310 256 270 Q258 240 256 210"
+        stroke="url(#nightStem)" stroke-width="6" fill="none" stroke-linecap="round"/>
+
+  <!-- Dornen am Stiel -->
+  <path d="M254 380 L245 374" stroke="#1A237E" stroke-width="2" stroke-linecap="round"/>
+  <path d="M255 355 L264 348" stroke="#1A237E" stroke-width="2" stroke-linecap="round"/>
+  <path d="M254 330 L246 323" stroke="#1A237E" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M255 305 L263 298" stroke="#1A237E" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M256 280 L248 273" stroke="#1A237E" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M256 258 L263 252" stroke="#1A237E" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- Blätter am Stiel -->
+  <path d="M254 370 Q235 355 220 360 Q230 348 248 358" fill="#1A237E" opacity="0.7"/>
+  <path d="M256 320 Q275 305 290 310 Q278 298 260 308" fill="#1A237E" opacity="0.6"/>
+
+  <!-- === BLÜTE === -->
+  <g transform="translate(256, 195)">
+
+    <!-- Äußere Blütenblätter (5 Stück, radialsymmetrisch) -->
+
+    <!-- Blütenblatt 1 — oben -->
+    <path d="M0,-10 Q-15,-45 -8,-80 Q0,-95 8,-80 Q15,-45 0,-10"
+          fill="url(#petalDark)" stroke="#212121" stroke-width="1.2"/>
+    <!-- Schwarzer Rand -->
+    <path d="M-8,-80 Q0,-95 8,-80" stroke="#0D0D0D" stroke-width="2" fill="none" opacity="0.7"/>
+
+    <!-- Blütenblatt 2 — rechts oben -->
+    <path d="M8,-5 Q40,-30 70,-35 Q82,-25 65,-15 Q38,0 8,-5"
+          fill="url(#petalDark2)" stroke="#212121" stroke-width="1.2" transform="rotate(-15)"/>
+    <path d="M70,-35 Q82,-25 65,-15" stroke="#0D0D0D" stroke-width="2" fill="none" opacity="0.7"/>
+
+    <!-- Blütenblatt 3 — links oben -->
+    <path d="M-8,-5 Q-40,-30 -70,-35 Q-82,-25 -65,-15 Q-38,0 -8,-5"
+          fill="url(#petalDark)" stroke="#212121" stroke-width="1.2" transform="rotate(15)"/>
+    <path d="M-70,-35 Q-82,-25 -65,-15" stroke="#0D0D0D" stroke-width="2" fill="none" opacity="0.7"/>
+
+    <!-- Blütenblatt 4 — rechts unten -->
+    <path d="M10,5 Q45,15 60,35 Q55,48 42,38 Q25,22 10,5"
+          fill="url(#petalDark2)" stroke="#212121" stroke-width="1"/>
+    <path d="M60,35 Q55,48 42,38" stroke="#0D0D0D" stroke-width="1.5" fill="none" opacity="0.6"/>
+
+    <!-- Blütenblatt 5 — links unten -->
+    <path d="M-10,5 Q-45,15 -60,35 Q-55,48 -42,38 Q-25,22 -10,5"
+          fill="url(#petalDark)" stroke="#212121" stroke-width="1"/>
+    <path d="M-60,35 Q-55,48 -42,38" stroke="#0D0D0D" stroke-width="1.5" fill="none" opacity="0.6"/>
+
+    <!-- Innere Blütenblätter (kleinere, hellere Akzente) -->
+    <path d="M0,-5 Q-8,-25 -4,-45 Q0,-52 4,-45 Q8,-25 0,-5"
+          fill="url(#petalInner)" opacity="0.7"/>
+    <path d="M5,0 Q22,-8 35,-5 Q38,2 28,5 Q15,4 5,0"
+          fill="url(#petalInner)" opacity="0.6"/>
+    <path d="M-5,0 Q-22,-8 -35,-5 Q-38,2 -28,5 Q-15,4 -5,0"
+          fill="url(#petalInner)" opacity="0.6"/>
+
+    <!-- Blütenkelch-Mitte -->
+    <circle cx="0" cy="0" r="8" fill="#311B92" opacity="0.9"/>
+    <circle cx="0" cy="0" r="4" fill="#212121" opacity="0.8"/>
+
+    <!-- Blütenblatt-Adern (subtil) -->
+    <path d="M0,-10 Q-3,-40 -6,-70" stroke="#7B1FA2" stroke-width="0.6" fill="none" opacity="0.3"/>
+    <path d="M0,-10 Q3,-40 6,-70" stroke="#7B1FA2" stroke-width="0.6" fill="none" opacity="0.3"/>
+  </g>
+
+  <!-- === DUNKLER NEBEL AUS DEM KELCH === -->
+  <g filter="url(#mistBlur)">
+    <ellipse cx="256" cy="175" rx="50" ry="30" fill="#212121" opacity="0.3"/>
+    <ellipse cx="248" cy="155" rx="35" ry="20" fill="#1A1A1A" opacity="0.25"/>
+    <ellipse cx="268" cy="140" rx="25" ry="15" fill="#212121" opacity="0.18"/>
+  </g>
+  <g filter="url(#mistBlurLight)">
+    <ellipse cx="242" cy="130" rx="20" ry="12" fill="#0D0D0D" opacity="0.12"/>
+    <ellipse cx="270" cy="120" rx="15" ry="10" fill="#1A1A1A" opacity="0.1"/>
+  </g>
+
+  <!-- Subtile violette Lichtpunkte im Nebel -->
+  <g filter="url(#darkGlow)">
+    <circle cx="240" cy="150" r="2" fill="#7B1FA2" opacity="0.3"/>
+    <circle cx="270" cy="140" r="1.5" fill="#880E4F" opacity="0.25"/>
+    <circle cx="255" cy="125" r="1.5" fill="#4A148C" opacity="0.2"/>
+  </g>
+
+  <!-- Erdhügel -->
+  <ellipse cx="256" cy="428" rx="48" ry="11" fill="#1A0A12" opacity="0.6"/>
+  <ellipse cx="256" cy="426" rx="40" ry="8" fill="#2A1020" opacity="0.5"/>
+
+  <!-- === RARITÄTS-RAHMEN (Common) === -->
+  <rect x="6" y="6" width="500" height="500" rx="20" fill="none"
+        stroke="url(#frameGrad)" stroke-width="6" opacity="0.9"/>
+  <rect x="10" y="10" width="492" height="492" rx="18" fill="none"
+        stroke="#F5F5F5" stroke-width="1" opacity="0.3"/>
+</svg>
