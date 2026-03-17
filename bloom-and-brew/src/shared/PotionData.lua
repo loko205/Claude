@@ -322,17 +322,20 @@ function PotionData.CalculatePurity(extractPotencies, cauldronLevel, minigameSco
         potentBonus = Config.Plants.Traits.Potent.PurityBonus
     end
 
-    -- Weighted sum
-    local purity = (avgPotency * 100 * weights.ExtractPotency)
-                  + (cauldronBonus * weights.CauldronBonus / 0.20 * 100 * weights.CauldronBonus)
-                  + (minigameBonus * weights.MinigameScore / 0.20)
-                  + (potentBonus * weights.PotentTrait / 0.10)
+    -- Weighted purity: Each factor contributes proportionally
+    -- Max potency contribution: 100 * 0.50 = 50
+    -- Max cauldron contribution: 20 / 20 * 100 * 0.20 = 20
+    -- Max minigame contribution: 20 / 20 * 100 * 0.20 = 20
+    -- Max potent contribution: 15 / 15 * 100 * 0.10 = 10
+    -- Total max = 100
+    local maxCauldronBonus = Config.Brewing.CauldronLevels[#Config.Brewing.CauldronLevels].PurityBonus
+    local maxMinigameBonus = Config.Brewing.MinigameMaxBonus
+    local maxPotentBonus = Config.Plants.Traits.Potent.PurityBonus
 
-    -- Simpler calculation: Base from potency + bonuses
-    purity = (avgPotency * 60) -- Max 60 from ingredients
-           + cauldronBonus      -- Max 20 from cauldron
-           + (minigameBonus)    -- Max 20 from minigame
-           + (hasPotentTrait and potentBonus or 0) -- Bonus from trait
+    local purity = (avgPotency * 100 * weights.ExtractPotency)
+                  + ((cauldronBonus / math.max(1, maxCauldronBonus)) * 100 * weights.CauldronBonus)
+                  + ((minigameBonus / math.max(1, maxMinigameBonus)) * 100 * weights.MinigameScore)
+                  + ((potentBonus / math.max(1, maxPotentBonus)) * 100 * weights.PotentTrait)
 
     -- Random variance
     local variance = (math.random() * 2 - 1) * Config.Brewing.RandomPurityRange

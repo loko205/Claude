@@ -183,19 +183,28 @@ function BrewingEngine.SubmitMinigame(player, inputs)
     -- Validate inputs aren't physically impossible (anti-cheat)
     if type(inputs) ~= "table" then return false, "Ungültige Eingabe" end
 
+    -- Anti-cheat: Check minimum brew time has passed before accepting minigame
+    local brew = data.Lab.ActiveBrew
+    local elapsed = os.time() - brew.StartTime
+    if elapsed < 5 then
+        return false, "Brauvorgang gerade erst gestartet"
+    end
+
     local score = 0
 
     -- Timing score (0-40 points): How well timed were the ingredient additions?
+    -- Anti-cheat: Limit timing entries to actual ingredient count
     if inputs.timings and type(inputs.timings) == "table" then
         local timingScore = 0
-        for _, timing in ipairs(inputs.timings) do
+        local maxTimings = math.min(#inputs.timings, 4) -- Max 4 ingredients
+        for i = 1, maxTimings do
+            local timing = inputs.timings[i]
             if type(timing) ~= "number" then continue end
-            -- Perfect timing = 1.0, worst = 0.0
             local accuracy = math.max(0, math.min(1, timing))
             timingScore = timingScore + accuracy
         end
-        if #inputs.timings > 0 then
-            timingScore = (timingScore / #inputs.timings) * 40
+        if maxTimings > 0 then
+            timingScore = (timingScore / maxTimings) * 40
         end
         score = score + timingScore
     end
@@ -288,6 +297,9 @@ function BrewingEngine.CollectPotion(player)
 
     table.insert(data.Inventory.Potions, newPotion)
 
+    -- Check for new discovery BEFORE updating potiondex
+    local isNewDiscovery = not data.Potiondex[actualPotionId]
+
     -- Update potiondex
     data.Potiondex[actualPotionId] = true
 
@@ -302,8 +314,8 @@ function BrewingEngine.CollectPotion(player)
     end
     DataManager.AddXP(player, Config.Economy.XP.Brew)
 
-    -- Check for new discovery
-    if not data.Potiondex[actualPotionId] then
+    -- Grant new discovery XP
+    if isNewDiscovery then
         DataManager.AddXP(player, Config.Economy.XP.NewDiscovery)
     end
 
