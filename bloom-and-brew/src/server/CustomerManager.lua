@@ -89,7 +89,7 @@ local function generateConcreteOrder(customerTypeId, playerLevel, playerRep)
 end
 
 -- ============================================================
--- ORDER SPAWNING (timer-based)
+-- ORDER SPAWNING (Timer-based)
 -- ============================================================
 
 local playerSpawnTimers = {}

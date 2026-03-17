@@ -350,7 +350,7 @@ function BrewingEngine.UpgradeCauldron(player)
     local nextLevel = currentLevel + 1
 
     if nextLevel > #Config.Brewing.CauldronLevels then
-        return false, "Maximum cauldron level reached"
+        return false, "Max cauldron level reached"
     end
 
     local nextCauldron = Config.Brewing.CauldronLevels[nextLevel]

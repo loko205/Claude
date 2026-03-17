@@ -1,6 +1,6 @@
 --[[
     EconomyManager.lua — Currency Management, Shop, Level-Ups, Daily Rewards
-    Anti-Exploit: All transactions validated server-side.
+    Anti-Exploit: All transactions server-validated.
 ]]
 
 local Players = game:GetService("Players")

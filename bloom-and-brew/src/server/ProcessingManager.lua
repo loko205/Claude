@@ -80,7 +80,7 @@ function ProcessingManager.UpgradeMachine(player, methodId)
     end
 
     if machine.Level >= #Config.Processing.UpgradeLevels then
-        return false, "Already at maximum level"
+        return false, "Already at max level"
     end
 
     local targetLevel = machine.Level + 1

@@ -1,7 +1,7 @@
 --[[
     PlantManager.lua — Plants, Growth, Watering, Harvesting
     Server tick every 1s for growth progress.
-    All actions validated server-side.
+    All actions server-side validated.
 ]]
 
 local Players = game:GetService("Players")
@@ -211,7 +211,7 @@ function PlantManager.FertilizePlant(player, plotIndex, fieldIndex)
         return true, "Fertilized! Quality: " .. field.Quality .. " stars"
     end
 
-    return false, "Already at maximum quality"
+    return false, "Already at max quality"
 end
 
 -- Prune a plant (+Mutation chance, for later use in MutationEngine)
@@ -295,7 +295,7 @@ function PlantManager.UpgradePlot(player, plotIndex)
     if not plot then return false, "Plot does not exist" end
 
     if plot.Level >= #Config.Garden.PlotUpgradeCosts then
-        return false, "Maximum level reached"
+        return false, "Max level reached"
     end
 
     local cost = Config.Garden.PlotUpgradeCosts[plot.Level]
@@ -321,7 +321,7 @@ function PlantManager.BuyPlot(player, plotType)
     end
 
     if currentPlots >= maxPlots then
-        return false, "Maximum number of plots reached"
+        return false, "Max number of plots reached"
     end
 
     -- Cost based on how many plots the player already has
