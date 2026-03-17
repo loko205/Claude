@@ -1,0 +1,38 @@
+{
+  "name": "Bloom-and-Brew",
+  "tree": {
+    "$className": "DataModel",
+
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Shared": {
+        "$path": "src/shared"
+      }
+    },
+
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "Server": {
+        "$path": "src/server"
+      }
+    },
+
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Client": {
+          "$path": "src/client"
+        }
+      }
+    },
+
+    "ReplicatedStorage_Data": {
+      "$className": "ReplicatedStorage",
+      "$ignoreUnknownInstances": true,
+      "Data": {
+        "$path": "src/data"
+      }
+    }
+  }
+}

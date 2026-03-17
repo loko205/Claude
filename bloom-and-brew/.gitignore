@@ -1,0 +1,19 @@
+# Roblox
+*.rbxl
+*.rbxlx
+*.rbxm
+*.rbxmx
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Rojo
+roblox.lock
+
+# Build
+build/
