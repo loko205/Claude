@@ -1,17 +1,9 @@
--- Builds character models from definitions (procedural voxel look, no assets needed).
-local Factory = {}
+-- Assembles character models from the build plans in Shared/Designs.
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local function block(props: { [string]: any }): Part
-	local p = Instance.new("Part")
-	p.Anchored = true
-	p.CanCollide = false
-	p.TopSurface = Enum.SurfaceType.Smooth
-	p.BottomSurface = Enum.SurfaceType.Smooth
-	for key, value in props do
-		(p :: any)[key] = value
-	end
-	return p
-end
+local Designs = require(ReplicatedStorage.Shared.Designs)
+
+local Factory = {}
 
 local function label(parent: Instance, text: string, color: Color3, size: number)
 	local textLabel = Instance.new("TextLabel")
@@ -23,52 +15,50 @@ local function label(parent: Instance, text: string, color: Color3, size: number
 	textLabel.TextScaled = true
 	textLabel.TextStrokeTransparency = 0.3
 	textLabel.Parent = parent
-	return textLabel
 end
 
 -- Returns a fully assembled, anchored model. `showPrice` adds the price line
 -- (used on the conveyor; placed characters only show name + income).
 function Factory.build(def, showPrice: boolean): Model
 	local rarity = def.rarityInfo
-	local scale = 1 + (rarity.tier - 1) * 0.2
+	local scale = 1 + (rarity.tier - 1) * 0.12
+	local design = Designs[def.id]
 
 	local model = Instance.new("Model")
 	model.Name = def.id
 
-	local body = block({
-		Name = "Body",
-		Size = Vector3.new(2, 2.4, 1.4) * scale,
-		Color = def.color,
-		Material = rarity.tier >= 6 and Enum.Material.Neon or Enum.Material.SmoothPlastic,
-	})
-	body.Parent = model
-	model.PrimaryPart = body
-
-	local head = block({
-		Name = "Head",
-		Size = Vector3.new(1.5, 1.5, 1.5) * scale,
-		Color = def.color,
-		Material = body.Material,
-	})
-	head.CFrame = body.CFrame * CFrame.new(0, (body.Size.Y + head.Size.Y) / 2, 0)
-	head.Parent = model
-
-	for _, side in { -1, 1 } do
-		local eye = block({
-			Name = "Eye",
-			Size = Vector3.new(0.3, 0.3, 0.1) * scale,
-			Color = Color3.new(0, 0, 0),
-		})
-		eye.CFrame = head.CFrame * CFrame.new(side * 0.35 * scale, 0.2 * scale, -head.Size.Z / 2)
-		eye.Parent = model
+	for i, spec in design do
+		local part = Instance.new("Part")
+		part.Name = i == 1 and "Body" or "P" .. i
+		part.Anchored = true
+		part.CanCollide = false
+		part.TopSurface = Enum.SurfaceType.Smooth
+		part.BottomSurface = Enum.SurfaceType.Smooth
+		if spec.b then
+			part.Shape = Enum.PartType.Ball
+		end
+		part.Size = Vector3.new(spec.s[1], spec.s[2], spec.s[3]) * scale
+		part.CFrame = CFrame.new(spec.p[1] * scale, spec.p[2] * scale, spec.p[3] * scale)
+		part.Color = if spec.c then Color3.fromRGB(spec.c[1], spec.c[2], spec.c[3]) else def.color
+		part.Material = if spec.m then (Enum.Material :: any)[spec.m] else Enum.Material.SmoothPlastic
+		part.Transparency = spec.t or 0
+		part.Parent = model
+		if i == 1 then
+			model.PrimaryPart = part
+		end
 	end
+
+	-- Root pivot sits at design origin (y = 0); remember the lift to the model
+	-- bottom so callers can rest it on any surface.
+	local bboxCF, bboxSize = model:GetBoundingBox()
+	model:SetAttribute("GroundLift", -(bboxCF.Y - bboxSize.Y / 2))
 
 	local billboard = Instance.new("BillboardGui")
 	billboard.Size = UDim2.new(0, 160, 0, 70)
-	billboard.StudsOffset = Vector3.new(0, head.Size.Y + 1.5, 0)
+	billboard.StudsOffset = Vector3.new(0, bboxCF.Y + bboxSize.Y / 2 + 1.3, 0)
 	billboard.AlwaysOnTop = true
 	billboard.MaxDistance = 70
-	billboard.Parent = body
+	billboard.Parent = model.PrimaryPart
 
 	local layout = Instance.new("UIListLayout")
 	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
@@ -81,6 +71,12 @@ function Factory.build(def, showPrice: boolean): Model
 	end
 
 	return model
+end
+
+-- Rests the model's lowest point on `position`, optionally rotated around Y.
+function Factory.standOn(model: Model, position: Vector3, yaw: number?)
+	local lift = model:GetAttribute("GroundLift") or 0
+	model:PivotTo(CFrame.new(position + Vector3.new(0, lift, 0)) * CFrame.Angles(0, yaw or 0, 0))
 end
 
 return Factory

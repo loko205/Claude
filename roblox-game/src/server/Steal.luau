@@ -117,7 +117,8 @@ function Steal.init()
 			if not root then
 				continue
 			end
-			carry.model:PivotTo(root.CFrame * CFrame.new(0, 4.5, 0))
+			local lift = carry.model:GetAttribute("GroundLift") or 0
+			carry.model:PivotTo(root.CFrame * CFrame.new(0, 2 + lift, 0))
 
 			local plot = Plots.get(thief)
 			if plot then

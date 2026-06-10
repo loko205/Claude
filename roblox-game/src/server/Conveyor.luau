@@ -72,8 +72,8 @@ function Conveyor.init(belt)
 				table.remove(items, i)
 				continue
 			end
-			local bodyHeight = (item.model.PrimaryPart :: Part).Size.Y
-			item.model:PivotTo(CFrame.new(item.x, belt.beltTopY + bodyHeight / 2, 0))
+			local lift = item.model:GetAttribute("GroundLift") or 0
+			item.model:PivotTo(CFrame.new(item.x, belt.beltTopY + lift, 0))
 		end
 	end)
 end

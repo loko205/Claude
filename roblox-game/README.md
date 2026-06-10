@@ -34,10 +34,25 @@ Alternativ einmalig bauen: `rojo build -o StealASchnitzel.rbxlx` und die Datei i
 3. Nach dem ersten Update: Badges + tägliche Login-Belohnung ergänzen (siehe Roadmap
    in GAME_DESIGN.md).
 
+## Charakter-Designs
+
+Jeder Charakter hat einen eigenen prozeduralen Bauplan in `src/shared/Designs.luau`
+(reine Daten: Blöcke/Kugeln mit Größe, Position, Farbe, Material). `Factory.luau`
+baut daraus zur Laufzeit die Modelle — keine 3D-Assets nötig. Vorschau aller 21
+Designs: [docs/characters.png](docs/characters.png).
+
+Vorschau neu rendern (nach Design-Änderungen):
+
+```sh
+luau tools/export_designs.luau > /tmp/designs.json
+uv run --no-project --with pillow python tools/render_preview.py /tmp/designs.json docs/characters.png
+```
+
 ## Struktur
 
 ```
-src/shared/   Config (Tuning) + Characters (Definitionen, Rarities, Weighted Pick)
+src/shared/   Config (Tuning), Characters (Rarities, Weighted Pick), Designs (Baupläne)
 src/server/   Map, Plots, Conveyor, Steal, Economy, Data, Factory + Bootstrap
 src/client/   HUD (Cash, Income, Rebirth-Button, Steal-Banner, Notifications)
+tools/        Design-Export (Luau CLI) + isometrischer Preview-Renderer
 ```

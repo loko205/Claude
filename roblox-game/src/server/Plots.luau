@@ -188,8 +188,9 @@ function Plots.place(player: Player, def): boolean
 
 	local model = Factory.build(def, false)
 	local pad = plot.pads[slotIndex]
-	local bodyHeight = (model.PrimaryPart :: Part).Size.Y
-	model:PivotTo(CFrame.new(pad.Position + Vector3.new(0, pad.Size.Y / 2 + bodyHeight / 2, 0)))
+	-- Characters on plots face the map center (the belt).
+	local yaw = plot.origin.Z < 0 and math.pi or 0
+	Factory.standOn(model, pad.Position + Vector3.new(0, pad.Size.Y / 2, 0), yaw)
 
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.ActionText = "Steal!"
