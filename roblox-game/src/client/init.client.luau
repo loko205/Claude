@@ -2,6 +2,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local SoundService = game:GetService("SoundService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 
@@ -29,6 +30,36 @@ gui.Name = "HUD"
 gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
+-- Built-in SFX (no uploaded assets needed)
+local goodSound = Instance.new("Sound")
+goodSound.SoundId = "rbxasset://sounds/electronicpingshort.wav"
+goodSound.Volume = 0.6
+goodSound.Parent = SoundService
+local badSound = Instance.new("Sound")
+badSound.SoundId = "rbxasset://sounds/snap.mp3"
+badSound.Volume = 0.5
+badSound.Parent = SoundService
+
+local function styleFrame(frame: GuiObject, strokeColor: Color3?)
+	frame.BackgroundColor3 = Color3.fromRGB(18, 20, 28)
+	frame.BackgroundTransparency = 0.25
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 12)
+	corner.Parent = frame
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = strokeColor or Color3.fromRGB(80, 84, 100)
+	stroke.Thickness = 2
+	stroke.Transparency = 0.3
+	stroke.Parent = frame
+end
+
+-- Stats panel (top left)
+local statsPanel = Instance.new("Frame")
+statsPanel.Position = UDim2.new(0, 14, 0, 14)
+statsPanel.Size = UDim2.new(0, 250, 0, 92)
+statsPanel.Parent = gui
+styleFrame(statsPanel)
+
 local function makeLabel(props: { [string]: any }): TextLabel
 	local label = Instance.new("TextLabel")
 	label.BackgroundTransparency = 1
@@ -44,28 +75,31 @@ local function makeLabel(props: { [string]: any }): TextLabel
 end
 
 local cashLabel = makeLabel({
-	Position = UDim2.new(0, 20, 0, 20),
-	Size = UDim2.new(0, 220, 0, 40),
+	Position = UDim2.new(0, 16, 0, 10),
+	Size = UDim2.new(1, -32, 0, 42),
 	TextXAlignment = Enum.TextXAlignment.Left,
 	TextColor3 = Color3.fromRGB(120, 255, 120),
 	Text = "$0",
 })
+cashLabel.Parent = statsPanel
 
 local incomeLabel = makeLabel({
-	Position = UDim2.new(0, 20, 0, 62),
-	Size = UDim2.new(0, 220, 0, 26),
+	Position = UDim2.new(0, 16, 0, 54),
+	Size = UDim2.new(1, -32, 0, 26),
 	TextXAlignment = Enum.TextXAlignment.Left,
 	Text = "$0/s",
 })
+incomeLabel.Parent = statsPanel
 
 local carryBanner = makeLabel({
 	AnchorPoint = Vector2.new(0.5, 0),
-	Position = UDim2.new(0.5, 0, 0, 16),
-	Size = UDim2.new(0, 480, 0, 34),
+	Position = UDim2.new(0.5, 0, 0, 14),
+	Size = UDim2.new(0, 520, 0, 44),
 	TextColor3 = Color3.fromRGB(255, 220, 120),
 	Text = "",
 	Visible = false,
 })
+styleFrame(carryBanner, Color3.fromRGB(255, 170, 60))
 
 local rebirthButton = Instance.new("TextButton")
 rebirthButton.AnchorPoint = Vector2.new(0.5, 1)
@@ -79,6 +113,15 @@ rebirthButton.Parent = gui
 local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(0, 10)
 corner.Parent = rebirthButton
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new(Color3.fromRGB(150, 70, 220), Color3.fromRGB(255, 80, 180))
+gradient.Rotation = 90
+gradient.Parent = rebirthButton
+local buttonStroke = Instance.new("UIStroke")
+buttonStroke.Color = Color3.fromRGB(255, 255, 255)
+buttonStroke.Thickness = 2
+buttonStroke.Transparency = 0.5
+buttonStroke.Parent = rebirthButton
 
 rebirthButton.Activated:Connect(function()
 	rebirthRemote:FireServer()
@@ -103,6 +146,12 @@ feedLayout.Padding = UDim.new(0, 4)
 feedLayout.Parent = feed
 
 notifyRemote.OnClientEvent:Connect(function(text: string, color: Color3?)
+	-- Reddish notifications are warnings/failures, everything else is positive.
+	if color and color.R > color.G then
+		badSound:Play()
+	else
+		goodSound:Play()
+	end
 	local note = Instance.new("TextLabel")
 	note.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 	note.BackgroundTransparency = 0.3

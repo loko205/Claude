@@ -1,4 +1,5 @@
 -- Owns player bases: assignment, slots, placing/removing characters, locking, income.
+-- The plot geometry itself comes from MapBlueprint (via Map.build's keyed parts).
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
@@ -12,120 +13,58 @@ Plots.onSteal = nil :: ((thief: Player, plot: any, slotIndex: number) -> ())?
 local plots = {} -- array of plot state tables
 local plotByOwner: { [Player]: any } = {}
 
-local function buildPart(props: { [string]: any }): Part
-	local p = Instance.new("Part")
-	p.Anchored = true
-	p.TopSurface = Enum.SurfaceType.Smooth
-	p.BottomSurface = Enum.SurfaceType.Smooth
-	for key, value in props do
-		(p :: any)[key] = value
-	end
-	return p
+local function makeSignLabel(board: Part): TextLabel
+	local gui = Instance.new("BillboardGui")
+	gui.Size = UDim2.new(0, 260, 0, 56)
+	gui.StudsOffset = Vector3.new(0, 2.6, 0)
+	gui.AlwaysOnTop = true
+	gui.MaxDistance = 160
+	gui.Parent = board
+
+	local label = Instance.new("TextLabel")
+	label.BackgroundTransparency = 1
+	label.Size = UDim2.fromScale(1, 1)
+	label.Font = Enum.Font.FredokaOne
+	label.Text = "Free Base"
+	label.TextColor3 = Color3.fromRGB(255, 255, 255)
+	label.TextScaled = true
+	label.TextStrokeTransparency = 0.3
+	label.Parent = gui
+	return label
 end
 
-local function buildPlot(origin: Vector3, index: number, parent: Instance)
-	local model = Instance.new("Model")
-	model.Name = "Plot" .. index
+function Plots.init(map)
+	for i, origin in map.plotOrigins do
+		local pads = {}
+		for j = 1, Config.PlotSlots do
+			pads[j] = map.keyed[("p%d_pad%d"):format(i, j)]
+		end
+		local lockButton = map.keyed[("p%d_lock"):format(i)]
 
-	buildPart({
-		Name = "Floor",
-		Size = Vector3.new(28, 1, 28),
-		Position = origin + Vector3.new(0, 0.5, 0),
-		Color = Color3.fromRGB(120, 120, 130),
-		Material = Enum.Material.SmoothPlastic,
-		Parent = model,
-	})
+		local lockPrompt = Instance.new("ProximityPrompt")
+		lockPrompt.ActionText = ("Lock Base (%ds)"):format(Config.LockDuration)
+		lockPrompt.ObjectText = "Base Shield"
+		lockPrompt.RequiresLineOfSight = false
+		lockPrompt.Parent = lockButton
 
-	-- 12 slot pads in two rows of six.
-	local pads = {}
-	for i = 1, Config.PlotSlots do
-		local row = math.floor((i - 1) / 6)
-		local col = (i - 1) % 6
-		local pad = buildPart({
-			Name = "Pad" .. i,
-			Size = Vector3.new(3, 0.4, 3),
-			Position = origin + Vector3.new(-10 + col * 4, 1.2, -6 + row * 9),
-			Color = Color3.fromRGB(80, 80, 90),
-			Parent = model,
-		})
-		pads[i] = pad
-	end
+		local plot = {
+			index = i,
+			origin = origin,
+			owner = nil :: Player?,
+			slots = {} :: { [number]: { def: any, model: Model } },
+			pads = pads,
+			signLabel = makeSignLabel(map.keyed[("p%d_sign"):format(i)]),
+			shield = map.keyed[("p%d_shield"):format(i)],
+			lockPrompt = lockPrompt,
+			lockedUntil = 0,
+			lockReadyAt = 0,
+		}
 
-	-- Sign with the owner's name at the back of the plot.
-	local towardCenter = origin.Z > 0 and -1 or 1
-	local sign = buildPart({
-		Name = "Sign",
-		Size = Vector3.new(1, 8, 1),
-		Position = origin + Vector3.new(0, 4, -towardCenter * 13),
-		Color = Color3.fromRGB(60, 60, 70),
-		Parent = model,
-	})
-	local signGui = Instance.new("BillboardGui")
-	signGui.Size = UDim2.new(0, 240, 0, 50)
-	signGui.StudsOffset = Vector3.new(0, 5, 0)
-	signGui.AlwaysOnTop = true
-	signGui.Parent = sign
-	local signLabel = Instance.new("TextLabel")
-	signLabel.BackgroundTransparency = 1
-	signLabel.Size = UDim2.fromScale(1, 1)
-	signLabel.Font = Enum.Font.FredokaOne
-	signLabel.Text = "Free Base"
-	signLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-	signLabel.TextScaled = true
-	signLabel.TextStrokeTransparency = 0.3
-	signLabel.Parent = signGui
+		lockPrompt.Triggered:Connect(function(player)
+			Plots.tryLock(player, plot)
+		end)
 
-	-- Lock button at the front edge.
-	local lockButton = buildPart({
-		Name = "LockButton",
-		Size = Vector3.new(3, 1, 3),
-		Position = origin + Vector3.new(0, 1.5, towardCenter * 13),
-		Color = Color3.fromRGB(60, 160, 255),
-		Material = Enum.Material.Neon,
-		Parent = model,
-	})
-	local lockPrompt = Instance.new("ProximityPrompt")
-	lockPrompt.ActionText = ("Lock Base (%ds)"):format(Config.LockDuration)
-	lockPrompt.ObjectText = "Base Shield"
-	lockPrompt.RequiresLineOfSight = false
-	lockPrompt.Parent = lockButton
-
-	local shield = buildPart({
-		Name = "Shield",
-		Size = Vector3.new(28, 16, 28),
-		Position = origin + Vector3.new(0, 8, 0),
-		Color = Color3.fromRGB(100, 200, 255),
-		Material = Enum.Material.ForceField,
-		Transparency = 1,
-		CanCollide = false,
-		Parent = model,
-	})
-
-	model.Parent = parent
-
-	local plot = {
-		index = index,
-		origin = origin,
-		owner = nil :: Player?,
-		slots = {} :: { [number]: { def: any, model: Model } },
-		pads = pads,
-		signLabel = signLabel,
-		shield = shield,
-		lockPrompt = lockPrompt,
-		lockedUntil = 0,
-		lockReadyAt = 0,
-	}
-
-	lockPrompt.Triggered:Connect(function(player)
-		Plots.tryLock(player, plot)
-	end)
-
-	return plot
-end
-
-function Plots.init(plotOrigins: { Vector3 }, parent: Instance)
-	for i, origin in plotOrigins do
-		plots[i] = buildPlot(origin, i, parent)
+		plots[i] = plot
 	end
 end
 
@@ -159,10 +98,12 @@ function Plots.tryLock(player: Player, plot)
 	end
 	plot.lockedUntil = now + Config.LockDuration
 	plot.lockReadyAt = now + Config.LockDuration + Config.LockCooldown
-	plot.shield.Transparency = 0
+	plot.shield.Transparency = 0.5
 	plot.lockPrompt.Enabled = false
 	task.delay(Config.LockDuration, function()
-		plot.shield.Transparency = 1
+		if not Plots.isLocked(plot) then
+			plot.shield.Transparency = 1
+		end
 	end)
 	task.delay(Config.LockDuration + Config.LockCooldown, function()
 		plot.lockPrompt.Enabled = true

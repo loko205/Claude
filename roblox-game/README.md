@@ -34,25 +34,33 @@ Alternativ einmalig bauen: `rojo build -o StealASchnitzel.rbxlx` und die Datei i
 3. Nach dem ersten Update: Badges + tägliche Login-Belohnung ergänzen (siehe Roadmap
    in GAME_DESIGN.md).
 
-## Charakter-Designs
+## Designs & Map (daten-basiert + renderbar)
 
-Jeder Charakter hat einen eigenen prozeduralen Bauplan in `src/shared/Designs.luau`
-(reine Daten: Blöcke/Kugeln mit Größe, Position, Farbe, Material). `Factory.luau`
-baut daraus zur Laufzeit die Modelle — keine 3D-Assets nötig. Vorschau aller 21
-Designs: [docs/characters.png](docs/characters.png).
+Charaktere wie Map sind reine Daten-Baupläne, die zur Laufzeit prozedural gebaut
+werden — keine 3D-Assets nötig. Dieselben Daten lassen sich offline isometrisch
+rendern, sodass jede Design-Änderung visuell verifizierbar ist:
 
-Vorschau neu rendern (nach Design-Änderungen):
+- `src/shared/Designs.luau` → alle 21 Charaktere (einheitlicher Voxel-Stil, jede
+  Figur mit eigener Silhouette und Signature-Features): [docs/characters.png](docs/characters.png)
+- `src/shared/MapBlueprint.luau` → komplette Map (Förderband mit Portal-Bögen,
+  8 Plots mit Pads/Schild/Lock-Podest/Eckpfeiler-Lampen, Steinwege, Spawn-Plaza,
+  goldene Schnitzel-Statue, Bäume): [docs/map.png](docs/map.png)
+
+Previews neu rendern (nach Änderungen):
 
 ```sh
 luau tools/export_designs.luau > /tmp/designs.json
 uv run --no-project --with pillow python tools/render_preview.py /tmp/designs.json docs/characters.png
+luau tools/export_map.luau > /tmp/map.json
+(cd tools && uv run --no-project --with pillow python render_map.py /tmp/map.json ../docs/map.png)
 ```
 
 ## Struktur
 
 ```
-src/shared/   Config (Tuning), Characters (Rarities, Weighted Pick), Designs (Baupläne)
-src/server/   Map, Plots, Conveyor, Steal, Economy, Data, Factory + Bootstrap
-src/client/   HUD (Cash, Income, Rebirth-Button, Steal-Banner, Notifications)
-tools/        Design-Export (Luau CLI) + isometrischer Preview-Renderer
+src/shared/   Config (Tuning), Characters (Rarities, Weighted Pick), Designs, MapBlueprint
+src/server/   Map (instanziiert Blueprint + Lighting/Bloom), Plots, Conveyor, Steal,
+              Economy, Data, Factory + Bootstrap
+src/client/   HUD (Stats-Panel, Rebirth-Button, Steal-Banner, Notifications + SFX)
+tools/        Export-Scripts (Luau CLI) + isometrische Preview-Renderer
 ```

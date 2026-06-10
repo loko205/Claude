@@ -24,7 +24,7 @@ local Steal = require(script.Steal)
 local Data = require(script.Data)
 
 local belt = Map.build()
-Plots.init(belt.plotOrigins, belt.folder)
+Plots.init(belt)
 Conveyor.init(belt)
 Steal.init()
 Plots.onSteal = Steal.trySteal
