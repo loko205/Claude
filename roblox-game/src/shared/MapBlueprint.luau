@@ -159,6 +159,12 @@ function MapBlueprint.build()
 		add({ 1.0, 1.0, 1.0 }, { sx - 1.0, 1.7, -28.3 }, { c = { 160, 120, 75 }, m = "WoodPlanks" })
 	end
 
+	-- ===== Leaderboard board (east of the plaza, facing the street) =====
+	add({ 0.6, 7, 0.6 }, { 40.5, 3.5, -30 }, { c = { 80, 70, 60 } })
+	add({ 0.6, 7, 0.6 }, { 47.5, 3.5, -30 }, { c = { 80, 70, 60 } })
+	add({ 9, 5.2, 0.8 }, { 44, 7.2, -30 }, { c = { 38, 40, 48 }, k = "leaderboard" })
+	add({ 9.4, 0.5, 0.9 }, { 44, 10.05, -30 }, { c = { 255, 200, 60 }, m = "Metal" })
+
 	-- ===== Trees =====
 	local treeSpots = {
 		{ -140, -120 }, { 140, -120 }, { -140, 120 }, { 140, 120 },

@@ -57,27 +57,68 @@ end
 
 Characters.List = list
 
-local rng = Random.new()
-local totalWeight = 0
-for _, rarity in Characters.Rarities do
-	totalWeight += rarity.weight
+-- Mutations roll independently of rarity (rarest first). A unit is
+-- { def = characterDef, mut = mutation? } and flows through the whole game.
+Characters.Mutations = {
+	{ name = "Rainbow", chance = 0.002, mult = 25, color = Color3.fromRGB(255, 0, 100), material = Enum.Material.Neon },
+	{ name = "Diamond", chance = 0.01, mult = 8, color = Color3.fromRGB(150, 230, 255), material = Enum.Material.Ice },
+	{ name = "Golden", chance = 0.05, mult = 3, color = Color3.fromRGB(255, 200, 60), material = Enum.Material.Metal },
+}
+
+local mutByName = {}
+for _, mutation in Characters.Mutations do
+	mutByName[mutation.name] = mutation
 end
+
+local rng = Random.new()
 
 function Characters.byId(id: string)
 	return byId[id]
 end
 
--- Weighted random pick: rarity by weight, then uniform within the rarity.
-function Characters.pick()
-	local roll = rng:NextNumber() * totalWeight
+function Characters.getMutation(name: string?)
+	return if name then mutByName[name] else nil
+end
+
+function Characters.rollMutation(luck: number?)
+	local boost = luck or 1
+	for _, mutation in Characters.Mutations do
+		if rng:NextNumber() < mutation.chance * boost then
+			return mutation
+		end
+	end
+	return nil
+end
+
+-- Weighted random pick: rarity by weight (luck boosts Rare and above),
+-- then uniform within the rarity.
+function Characters.pick(luck: number?)
+	local boost = luck or 1
+	local total = 0
 	for _, rarity in Characters.Rarities do
-		roll -= rarity.weight
+		total += rarity.weight * (rarity.tier >= 3 and boost or 1)
+	end
+	local roll = rng:NextNumber() * total
+	for _, rarity in Characters.Rarities do
+		roll -= rarity.weight * (rarity.tier >= 3 and boost or 1)
 		if roll <= 0 then
 			local pool = byRarity[rarity.name]
 			return pool[rng:NextInteger(1, #pool)]
 		end
 	end
 	return list[1] -- unreachable fallback
+end
+
+function Characters.unitName(unit): string
+	return (unit.mut and unit.mut.name:upper() .. " " or "") .. unit.def.name
+end
+
+function Characters.unitIncome(unit): number
+	return math.floor(unit.def.income * (unit.mut and unit.mut.mult or 1))
+end
+
+function Characters.unitPrice(unit): number
+	return math.floor(unit.def.price * (unit.mut and unit.mut.mult or 1))
 end
 
 return Characters

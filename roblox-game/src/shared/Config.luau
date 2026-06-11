@@ -31,6 +31,32 @@ local Config = {
 	OfflineCap = 6 * 3600,
 
 	AutosaveInterval = 120,
+
+	-- Gold Rush event (server-wide luck boost)
+	GoldRushInterval = 18 * 60,
+	GoldRushDuration = 120,
+	GoldRushLuck = 3,
+
+	-- Daily login streak
+	DailyBase = 250,
+	DailyStreakCap = 7,
+
+	-- Schnitzel-Dex discovery reward (fraction of base price)
+	DiscoveryRewardFactor = 0.25,
+
+	LeaderboardRefresh = 90,
+
+	-- Paste your ids here after creating the passes/products in the
+	-- Creator Dashboard (0 = hidden in the shop until configured).
+	Monetization = {
+		GamepassDoubleCash = 0,
+		GamepassVIP = 0,
+		ProductCashSmall = 0,
+		ProductCashMedium = 0,
+		ProductCashLarge = 0,
+	},
+	VIPIncomeBonus = 0.5,
+	CashProductAmounts = { Small = 10000, Medium = 60000, Large = 400000 },
 }
 
 return Config

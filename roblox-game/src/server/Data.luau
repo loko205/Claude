@@ -14,6 +14,9 @@ local function defaultProfile()
 		cash = Config.StartCash,
 		rebirths = 0,
 		slots = {},
+		discovered = {},
+		streak = 0,
+		lastDaily = 0,
 		lastSeen = 0,
 		incomeRate = 0,
 	}

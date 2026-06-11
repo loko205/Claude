@@ -7,10 +7,17 @@ local Characters = require(ReplicatedStorage.Shared.Characters)
 local Factory = require(script.Parent.Factory)
 local Plots = require(script.Parent.Plots)
 local Economy = require(script.Parent.Economy)
+local Dex = require(script.Parent.Dex)
 
 local Conveyor = {}
 
-local items = {} -- { model: Model, def: any, x: number }
+local items = {} -- { model: Model, unit: any, x: number }
+local luck = 1
+
+-- Server-wide luck boost (Gold Rush event).
+function Conveyor.setLuck(value: number)
+	luck = value
+end
 
 local function notify(player: Player, text: string, color: Color3?)
 	ReplicatedStorage.Remotes.Notify:FireClient(player, text, color)
@@ -20,13 +27,14 @@ local function spawnItem(belt)
 	if #items >= Config.MaxItemsOnBelt then
 		return
 	end
-	local def = Characters.pick()
-	local model = Factory.build(def, true)
-	local item = { model = model, def = def, x = belt.beltStartX }
+	local unit = { def = Characters.pick(luck), mut = Characters.rollMutation(luck) }
+	local price = Characters.unitPrice(unit)
+	local model = Factory.build(unit, true)
+	local item = { model = model, unit = unit, x = belt.beltStartX }
 
 	local prompt = Instance.new("ProximityPrompt")
-	prompt.ActionText = ("Buy  $%d"):format(def.price)
-	prompt.ObjectText = def.name
+	prompt.ActionText = ("Buy  $%d"):format(price)
+	prompt.ObjectText = Characters.unitName(unit)
 	prompt.RequiresLineOfSight = false
 	prompt.MaxActivationDistance = 12
 	prompt.Parent = model.PrimaryPart
@@ -34,17 +42,19 @@ local function spawnItem(belt)
 		if model.Parent == nil then
 			return
 		end
-		if not Economy.trySpend(player, def.price) then
+		if not Economy.trySpend(player, price) then
 			notify(player, "Not enough cash!", Color3.fromRGB(255, 80, 80))
 			return
 		end
-		if not Plots.place(player, def) then
-			Economy.addCash(player, def.price) -- refund
+		if not Plots.place(player, unit) then
+			Economy.addCash(player, price) -- refund
 			notify(player, "Your base is full!", Color3.fromRGB(255, 80, 80))
 			return
 		end
 		model:Destroy()
-		notify(player, ("You bought %s!"):format(def.name), def.rarityInfo.color)
+		local color = unit.mut and unit.mut.color or unit.def.rarityInfo.color
+		notify(player, ("You bought %s!"):format(Characters.unitName(unit)), color)
+		Dex.mark(player, unit.def)
 	end)
 
 	model.Parent = workspace

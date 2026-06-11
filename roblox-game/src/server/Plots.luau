@@ -3,6 +3,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Characters = require(ReplicatedStorage.Shared.Characters)
 local Factory = require(script.Parent.Factory)
 
 local Plots = {}
@@ -51,7 +52,7 @@ function Plots.init(map)
 			index = i,
 			origin = origin,
 			owner = nil :: Player?,
-			slots = {} :: { [number]: { def: any, model: Model } },
+			slots = {} :: { [number]: { unit: any, model: Model } },
 			pads = pads,
 			signLabel = makeSignLabel(map.keyed[("p%d_sign"):format(i)]),
 			shield = map.keyed[("p%d_shield"):format(i)],
@@ -110,8 +111,8 @@ function Plots.tryLock(player: Player, plot)
 	end)
 end
 
--- Places a character into the first free slot. Returns true on success.
-function Plots.place(player: Player, def): boolean
+-- Places a unit ({def, mut?}) into the first free slot. Returns true on success.
+function Plots.place(player: Player, unit): boolean
 	local plot = plotByOwner[player]
 	if not plot then
 		return false
@@ -127,7 +128,7 @@ function Plots.place(player: Player, def): boolean
 		return false
 	end
 
-	local model = Factory.build(def, false)
+	local model = Factory.build(unit, false)
 	local pad = plot.pads[slotIndex]
 	-- Characters on plots face the map center (the belt).
 	local yaw = plot.origin.Z < 0 and math.pi or 0
@@ -135,7 +136,7 @@ function Plots.place(player: Player, def): boolean
 
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.ActionText = "Steal!"
-	prompt.ObjectText = def.name
+	prompt.ObjectText = Characters.unitName(unit)
 	prompt.HoldDuration = 1
 	prompt.RequiresLineOfSight = false
 	prompt.Parent = model.PrimaryPart
@@ -146,11 +147,11 @@ function Plots.place(player: Player, def): boolean
 	end)
 
 	model.Parent = workspace
-	plot.slots[slotIndex] = { def = def, model = model }
+	plot.slots[slotIndex] = { unit = unit, model = model }
 	return true
 end
 
--- Removes a slot and returns its definition (model is destroyed).
+-- Removes a slot and returns its unit (model is destroyed).
 function Plots.removeSlot(plot, slotIndex: number)
 	local slot = plot.slots[slotIndex]
 	if not slot then
@@ -158,7 +159,7 @@ function Plots.removeSlot(plot, slotIndex: number)
 	end
 	plot.slots[slotIndex] = nil
 	slot.model:Destroy()
-	return slot.def
+	return slot.unit
 end
 
 function Plots.getIncome(player: Player): number
@@ -168,7 +169,7 @@ function Plots.getIncome(player: Player): number
 	end
 	local income = 0
 	for _, slot in plot.slots do
-		income += slot.def.income
+		income += Characters.unitIncome(slot.unit)
 	end
 	local rebirths = player:GetAttribute("Rebirths") or 0
 	return math.floor(income * (1 + rebirths * Config.RebirthIncomeBonus))
@@ -186,15 +187,15 @@ function Plots.clear(player: Player)
 	end
 end
 
--- Frees the plot and returns the list of character ids for saving.
-function Plots.release(player: Player): { string }
+-- Frees the plot and returns the slot data for saving.
+function Plots.release(player: Player): { { id: string, mut: string? } }
 	local plot = plotByOwner[player]
 	if not plot then
 		return {}
 	end
 	local ids = {}
 	for _, slot in plot.slots do
-		table.insert(ids, slot.def.id)
+		table.insert(ids, { id = slot.unit.def.id, mut = slot.unit.mut and slot.unit.mut.name })
 	end
 	Plots.clear(player)
 	plot.owner = nil

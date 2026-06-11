@@ -27,6 +27,26 @@ und die Design-Entscheidungen.
 
 Alternativ einmalig bauen: `rojo build -o StealASchnitzel.rbxlx` und die Datei in Studio öffnen.
 
+## Retention- & Social-Systeme
+
+- **Mutationen:** Golden (5 %, 3x), Diamond (1 %, 8x), Rainbow (0,2 %, 25x, animierter
+  Farbwechsel) — rollen unabhängig von der Rarity und machen fremde Basen zu Zielen.
+- **Gold Rush:** Alle 18 Min serverweit 3x Luck für 2 Min (gemeinsamer Hype-Moment).
+- **Schnitzel-Dex:** Sammel-Index (DEX-Button) mit Cash-Belohnung pro Erstfund.
+- **Daily Streak:** Login-Bonus, skaliert bis Tag 7. **Startgeschenk** für neue Spieler.
+- **Globales Leaderboard:** Reichste Spieler auf der Tafel an der Plaza (OrderedDataStore).
+- **Multiplayer:** Alles ist server-authoritativ und automatisch für alle sichtbar —
+  Basen, Pets, Diebe mit Beute überm Kopf, Schilde, Events.
+
+## Monetarisierung einrichten (nach dem Publishen)
+
+1. Creator Dashboard → dein Experience → **Monetization**:
+   - 2 Gamepasses anlegen: „2x Cash" und „VIP" (Vorschlag: 199/149 Robux)
+   - 3 Developer Products: Cash-Pakete klein/mittel/groß (49/199/899 Robux)
+2. Die IDs in `src/shared/Config.luau` unter `Monetization` eintragen (statt 0).
+3. Fertig — Server prüft Gamepasses bei der Income-Berechnung, `ProcessReceipt`
+   schreibt Cash-Käufe gut, der Shop-Button blendet konfigurierte Artikel ein.
+
 ## Veröffentlichen
 
 1. File → Publish to Roblox, Server-Größe **8** (= Anzahl der Plots).
