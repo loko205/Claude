@@ -39,7 +39,7 @@ def main():
         alpha = int(255 * (1 - part.get("t", 0)))
         if part.get("m") == "Neon":
             x, y = project(part["p"], k, ox, oy)
-            r = k * max(part["s"]) * 0.7
+            r = k * min(max(part["s"]), 10) * 0.7
             ImageDraw.Draw(glow).ellipse([x - r, y - r, x + r, y + r], fill=shade(color, 1.1) + (60,))
             color = shade(color, 1.25)
         draw_box(img, part["p"], part["s"], color, alpha, k, ox, oy)

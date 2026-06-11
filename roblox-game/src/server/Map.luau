@@ -32,7 +32,7 @@ local function addTitleSign(folder: Folder)
 	anchor.CanCollide = false
 	anchor.Transparency = 1
 	anchor.Size = Vector3.new(1, 1, 1)
-	anchor.Position = Vector3.new(0, 12, -46)
+	anchor.Position = Vector3.new(0, 27, -75)
 	anchor.Parent = folder
 
 	local billboard = Instance.new("BillboardGui")
