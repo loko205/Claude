@@ -344,17 +344,26 @@ function Terrain.init()
 	folder.Name = "Island"
 	folder.Parent = workspace
 
-	-- Rolling surface: clusters of extra topsoil blocks (k = 0) so the island
-	-- top isn't a flat plate. Mounds are diggable like everything else.
-	local mounds: { [string]: boolean } = {}
-	for _ = 1, rng:NextInteger(6, 9) do
-		local ci = rng:NextInteger(4, SIZE_X - 3)
-		local cj = rng:NextInteger(5, SIZE_Z - 3)
-		local radius = rng:NextInteger(2, 4)
+	-- Rolling surface: a smooth height field built from a few hill cones.
+	-- Heights are 0-3 extra topsoil blocks (k = 0, -1, -2), contiguous and
+	-- terraced like proper voxel hills - and diggable like everything else.
+	local heights: { [string]: number } = {}
+	for _ = 1, rng:NextInteger(5, 7) do
+		local ci = rng:NextInteger(5, SIZE_X - 4)
+		local cj = rng:NextInteger(7, SIZE_Z - 4)
+		local radius = rng:NextInteger(3, 6)
+		local peak = rng:NextInteger(2, 3)
 		for di = -radius, radius do
 			for dj = -radius, radius do
-				if di * di + dj * dj <= radius * radius and rng:NextNumber() < 0.85 then
-					mounds[(ci + di) .. "," .. (cj + dj)] = true
+				local i, j = ci + di, cj + dj
+				-- keep the camp entrance row flat and stay off the island rim
+				if i >= 2 and i <= SIZE_X - 1 and j >= 3 and j <= SIZE_Z - 1 then
+					local dist = math.sqrt(di * di + dj * dj)
+					local h = math.floor(peak * (1 - dist / radius) + 0.5)
+					if h > 0 then
+						local cellKey = i .. "," .. j
+						heights[cellKey] = math.max(heights[cellKey] or 0, h)
+					end
 				end
 			end
 		end
@@ -362,13 +371,11 @@ function Terrain.init()
 
 	for i = 1, SIZE_X do
 		for j = 1, SIZE_Z do
-			spawnCell(i, j, 1, mounds[i .. "," .. j] == true)
-		end
-	end
-	for i = 1, SIZE_X do
-		for j = 1, SIZE_Z do
-			if mounds[i .. "," .. j] then
-				spawnCell(i, j, 0)
+			local h = heights[i .. "," .. j] or 0
+			spawnCell(i, j, 1, h > 0)
+			for level = 1, h do
+				-- decor only on the top block of each stack
+				spawnCell(i, j, 1 - level, level < h)
 			end
 		end
 	end

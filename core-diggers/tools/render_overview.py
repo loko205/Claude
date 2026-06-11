@@ -87,26 +87,31 @@ def main():
             spec["c"] = tuple(int(cc * 0.35 + occ * 0.65) for cc, occ in zip(c, oc))
         parts.append(spec)
 
-    # Rolling surface mounds + block decoration (mirrors Terrain.init)
-    mounds = set()
-    for _ in range(8):
-        ci, cj = random.randint(4, sx - 3), random.randint(5, sz - 3)
-        rr = random.randint(2, 4)
+    # Rolling surface height field + block decoration (mirrors Terrain.init)
+    import math
+    heights = {}
+    for _ in range(6):
+        ci, cj = random.randint(5, sx - 4), random.randint(7, sz - 4)
+        rr = random.randint(3, 6)
+        peak = random.randint(2, 3)
         for di in range(-rr, rr + 1):
             for dj in range(-rr, rr + 1):
-                if di * di + dj * dj <= rr * rr and random.random() < 0.85:
-                    mounds.add((ci + di, cj + dj))
-    mounds = {(i, j) for (i, j) in mounds
-              if 1 <= i <= sx and 1 <= j <= sz and cut_depth(i, j) == 0}
+                i, j = ci + di, cj + dj
+                if 2 <= i <= sx - 1 and 3 <= j <= sz - 1 and cut_depth(i, j) == 0:
+                    dist = math.sqrt(di * di + dj * dj)
+                    h = int(peak * (1 - dist / rr) + 0.5)
+                    if h > 0:
+                        heights[(i, j)] = max(heights.get((i, j), 0), h)
     topsoil = layer_at[1]["color"]
-    for (i, j) in mounds:
-        jit = random.randint(-7, 7)
-        col = tuple(max(0, min(255, int(v + jit))) for v in topsoil)
-        parts.append({"s": [bs, bs, bs], "p": list(pos(i, j, 0)), "c": col})
+    for (i, j), h in heights.items():
+        for level in range(1, h + 1):
+            jit = random.randint(-7, 7)
+            col = tuple(max(0, min(255, int(v + jit))) for v in topsoil)
+            parts.append({"s": [bs, bs, bs], "p": list(pos(i, j, 1 - level)), "c": col})
 
     FLOWERS = [(235, 90, 90), (245, 205, 80), (190, 120, 235), (245, 245, 240)]
-    tops = {(i, j, 1) for (i, j, k) in cells if k == 1 and (i, j) not in mounds}
-    tops |= {(i, j, 0) for (i, j) in mounds}
+    tops = {(i, j, 1) for (i, j, k) in cells if k == 1 and (i, j) not in heights}
+    tops |= {(i, j, 1 - h) for (i, j), h in heights.items()}
     for (i, j, k) in tops:
         roll = random.random()
         if roll >= 0.2:
