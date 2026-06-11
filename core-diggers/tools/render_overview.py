@@ -87,6 +87,46 @@ def main():
             spec["c"] = tuple(int(cc * 0.35 + occ * 0.65) for cc, occ in zip(c, oc))
         parts.append(spec)
 
+    # Rolling surface mounds + block decoration (mirrors Terrain.init)
+    mounds = set()
+    for _ in range(8):
+        ci, cj = random.randint(4, sx - 3), random.randint(5, sz - 3)
+        rr = random.randint(2, 4)
+        for di in range(-rr, rr + 1):
+            for dj in range(-rr, rr + 1):
+                if di * di + dj * dj <= rr * rr and random.random() < 0.85:
+                    mounds.add((ci + di, cj + dj))
+    mounds = {(i, j) for (i, j) in mounds
+              if 1 <= i <= sx and 1 <= j <= sz and cut_depth(i, j) == 0}
+    topsoil = layer_at[1]["color"]
+    for (i, j) in mounds:
+        jit = random.randint(-7, 7)
+        col = tuple(max(0, min(255, int(v + jit))) for v in topsoil)
+        parts.append({"s": [bs, bs, bs], "p": list(pos(i, j, 0)), "c": col})
+
+    FLOWERS = [(235, 90, 90), (245, 205, 80), (190, 120, 235), (245, 245, 240)]
+    tops = {(i, j, 1) for (i, j, k) in cells if k == 1 and (i, j) not in mounds}
+    tops |= {(i, j, 0) for (i, j) in mounds}
+    for (i, j, k) in tops:
+        roll = random.random()
+        if roll >= 0.2:
+            continue
+        x, y, z = pos(i, j, k)
+        bx = x + random.uniform(-1.2, 1.2)
+        bz = z + random.uniform(-1.2, 1.2)
+        by = y + bs / 2
+        if roll < 0.10:  # grass tuft
+            parts.append({"s": [0.9, 0.7, 0.9], "p": [bx, by + 0.35, bz], "c": (95, 165, 80)})
+        elif roll < 0.14:  # flower
+            parts.append({"s": [0.18, 0.9, 0.18], "p": [bx, by + 0.45, bz], "c": (90, 140, 70)})
+            parts.append({"s": [0.5, 0.4, 0.5], "p": [bx, by + 1.1, bz], "c": random.choice(FLOWERS)})
+        elif roll < 0.18:  # boulder
+            parts.append({"s": [1.5, 0.9, 1.2], "p": [bx, by + 0.45, bz], "c": (135, 135, 140)})
+        else:  # sapling
+            parts.append({"s": [0.7, 2.8, 0.7], "p": [bx, by + 1.4, bz], "c": (110, 80, 55)})
+            parts.append({"s": [3, 2.2, 3], "p": [bx, by + 3.6, bz], "c": (88, 150, 82)})
+            parts.append({"s": [2, 1.4, 2], "p": [bx, by + 4.9, bz], "c": (104, 170, 92)})
+
     # The core glows at the bottom of the deepest shaft (artistic stand-in for
     # the real one under the island center).
     parts.append({"s": [bs * 2, bs * 2, bs * 2], "p": list(pos(25, 2, depth)), "c": (255, 130, 40), "m": "Neon"})

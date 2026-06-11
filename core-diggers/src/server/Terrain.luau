@@ -68,6 +68,46 @@ local function spawnCore()
 	coreDown = false
 end
 
+local DECOR_FLOWERS = {
+	Color3.fromRGB(235, 90, 90),
+	Color3.fromRGB(245, 205, 80),
+	Color3.fromRGB(190, 120, 235),
+	Color3.fromRGB(245, 245, 240),
+}
+
+-- Surface decoration is parented to its block, so it vanishes when the block
+-- is dug out (nothing ever floats). CanQuery=false lets clicks pass through.
+local function addDecor(blockPart: Part)
+	local roll = rng:NextNumber()
+	if roll >= 0.2 then
+		return
+	end
+	local base = blockPart.Position + Vector3.new(rng:NextNumber(-1.2, 1.2), BS / 2, rng:NextNumber(-1.2, 1.2))
+	local function deco(size: Vector3, offset: Vector3, color: Color3, material: Enum.Material?)
+		local p = Instance.new("Part")
+		p.Anchored = true
+		p.CanCollide = false
+		p.CanQuery = false
+		p.Size = size
+		p.Position = base + offset
+		p.Color = color
+		p.Material = material or Enum.Material.SmoothPlastic
+		p.Parent = blockPart
+	end
+	if roll < 0.10 then -- grass tuft
+		deco(Vector3.new(0.9, 0.7, 0.9), Vector3.new(0, 0.35, 0), Color3.fromRGB(95, 165, 80), Enum.Material.Grass)
+	elseif roll < 0.14 then -- flower
+		deco(Vector3.new(0.18, 0.9, 0.18), Vector3.new(0, 0.45, 0), Color3.fromRGB(90, 140, 70))
+		deco(Vector3.new(0.5, 0.4, 0.5), Vector3.new(0, 1.1, 0), DECOR_FLOWERS[rng:NextInteger(1, #DECOR_FLOWERS)])
+	elseif roll < 0.18 then -- boulder
+		deco(Vector3.new(1.5, 0.9, 1.2), Vector3.new(0, 0.45, 0), Color3.fromRGB(135, 135, 140), Enum.Material.Rock)
+	else -- sapling
+		deco(Vector3.new(0.7, 2.8, 0.7), Vector3.new(0, 1.4, 0), Color3.fromRGB(110, 80, 55), Enum.Material.Wood)
+		deco(Vector3.new(3, 2.2, 3), Vector3.new(0, 3.6, 0), Color3.fromRGB(88, 150, 82), Enum.Material.Grass)
+		deco(Vector3.new(2, 1.4, 2), Vector3.new(0, 4.9, 0), Color3.fromRGB(104, 170, 92), Enum.Material.Grass)
+	end
+end
+
 local spawnCell -- forward declaration
 
 local function reveal(i: number, j: number, k: number)
@@ -81,7 +121,7 @@ local function reveal(i: number, j: number, k: number)
 	spawnCell(i, j, k)
 end
 
-spawnCell = function(i: number, j: number, k: number)
+spawnCell = function(i: number, j: number, k: number, skipDecor: boolean?)
 	local cellKey = key(i, j, k)
 	if cells[cellKey] then
 		return
@@ -89,7 +129,8 @@ spawnCell = function(i: number, j: number, k: number)
 	if isCoreSlot(i, j, k) then
 		return
 	end
-	local layer = World.layerAt(k)
+	-- k = 0 holds the surface mounds; they count as topsoil
+	local layer = World.layerAt(math.max(k, 1))
 	local part = Instance.new("Part")
 	part.Anchored = true
 	part.Size = Vector3.new(BS, BS, BS)
@@ -153,6 +194,10 @@ spawnCell = function(i: number, j: number, k: number)
 	click.MouseClick:Connect(function(player)
 		Terrain.hit(player, cell, cellKey)
 	end)
+
+	if k <= 1 and not skipDecor then
+		addDecor(part)
+	end
 end
 
 local function swingAllowed(player: Player): boolean
@@ -299,9 +344,32 @@ function Terrain.init()
 	folder.Name = "Island"
 	folder.Parent = workspace
 
+	-- Rolling surface: clusters of extra topsoil blocks (k = 0) so the island
+	-- top isn't a flat plate. Mounds are diggable like everything else.
+	local mounds: { [string]: boolean } = {}
+	for _ = 1, rng:NextInteger(6, 9) do
+		local ci = rng:NextInteger(4, SIZE_X - 3)
+		local cj = rng:NextInteger(5, SIZE_Z - 3)
+		local radius = rng:NextInteger(2, 4)
+		for di = -radius, radius do
+			for dj = -radius, radius do
+				if di * di + dj * dj <= radius * radius and rng:NextNumber() < 0.85 then
+					mounds[(ci + di) .. "," .. (cj + dj)] = true
+				end
+			end
+		end
+	end
+
 	for i = 1, SIZE_X do
 		for j = 1, SIZE_Z do
-			spawnCell(i, j, 1)
+			spawnCell(i, j, 1, mounds[i .. "," .. j] == true)
+		end
+	end
+	for i = 1, SIZE_X do
+		for j = 1, SIZE_Z do
+			if mounds[i .. "," .. j] then
+				spawnCell(i, j, 0)
+			end
 		end
 	end
 	-- Side shell so the floating island looks solid from outside
