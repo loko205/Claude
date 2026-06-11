@@ -5,6 +5,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local World = require(ReplicatedStorage.Shared.World)
 local Economy = require(script.Parent.Economy)
 local Monetize = require(script.Parent.Monetize)
+local Contracts = require(script.Parent.Contracts)
 
 local Inventory = {}
 
@@ -21,6 +22,14 @@ local function bagCount(profile): number
 		n += count
 	end
 	return n
+end
+
+-- Light sync for the hot mining path (full relic sync only when relics change).
+local function syncBag(player: Player)
+	local profile = profiles[player]
+	if profile then
+		player:SetAttribute("Bag", bagCount(profile))
+	end
 end
 
 local function syncAttrs(player: Player)
@@ -91,6 +100,7 @@ function Inventory.award(player: Player, layerLike, layerIndex: number, luck: nu
 			local shiny = rng:NextNumber() < World.ShinyChance
 			local key = shiny and "shiny_" .. id or id
 			profile.inv[key] = (profile.inv[key] or 0) + 1
+			Contracts.onOre(player, id, 1)
 			local item = World.Items[id]
 			if shiny then
 				notify(player, ("SHINY %s! (worth %dx)"):format(item.name, World.ShinyMult), Color3.fromRGB(255, 230, 120))
@@ -105,6 +115,7 @@ function Inventory.award(player: Player, layerLike, layerIndex: number, luck: nu
 		local relicId = rollRelic(math.max(layerIndex, 1))
 		if relicId then
 			profile.relics[relicId] = (profile.relics[relicId] or 0) + 1
+			player:SetAttribute("relic_" .. relicId, profile.relics[relicId])
 			local relic = World.relic(relicId)
 			notify(player, ("RELIC FOUND: %s! Bring it to the museum!"):format(relic.name), Color3.fromRGB(255, 205, 80))
 			if relic.layer == 0 then
@@ -116,7 +127,40 @@ function Inventory.award(player: Player, layerLike, layerIndex: number, luck: nu
 		end
 	end
 
-	syncAttrs(player)
+	syncBag(player)
+end
+
+-- Visible ore veins pay out a guaranteed bundle.
+function Inventory.awardVein(player: Player, oreId: string, count: number)
+	local profile = profiles[player]
+	if not profile then
+		return
+	end
+	local shinies = 0
+	for _ = 1, count do
+		local shiny = rng:NextNumber() < World.ShinyChance
+		local key = shiny and "shiny_" .. oreId or oreId
+		profile.inv[key] = (profile.inv[key] or 0) + 1
+		if shiny then
+			shinies += 1
+		end
+	end
+	Contracts.onOre(player, oreId, count)
+	local item = World.Items[oreId]
+	notify(
+		player,
+		("ORE VEIN: %dx %s%s!"):format(count, item.name, shinies > 0 and (" (%d SHINY!)"):format(shinies) or ""),
+		Color3.fromRGB(item.color[1], item.color[2], item.color[3])
+	)
+	syncBag(player)
+end
+
+-- Golden treasure blocks burst into cash scaled by the layer's material value.
+function Inventory.awardTreasure(player: Player, layerLike)
+	local base = World.Items[layerLike.matId].value
+	local payout = math.floor(base * rng:NextInteger(World.TreasureMult.min, World.TreasureMult.max))
+	Economy.addCash(player, payout)
+	notify(player, ("TREASURE BLOCK! +$%d"):format(payout), Color3.fromRGB(255, 205, 80))
 end
 
 function Inventory.itemValue(key: string): number
@@ -155,6 +199,7 @@ function Inventory.sellAll(player: Player): number
 	if total > 0 then
 		profile.inv = {}
 		Economy.addCash(player, total)
+		Contracts.onSell(player, total)
 	end
 	syncAttrs(player)
 	return total

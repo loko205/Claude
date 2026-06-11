@@ -6,6 +6,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local World = require(ReplicatedStorage.Shared.World)
 local Inventory = require(script.Parent.Inventory)
 local Tools = require(script.Parent.Tools)
+local Contracts = require(script.Parent.Contracts)
 
 local Terrain = {}
 
@@ -20,6 +21,7 @@ local BS = World.BlockSize
 local cells: { [string]: any } = {} -- key -> cell table | "mined"
 local folder: Folder
 local lastSwing: { [Player]: number } = {}
+local lastFullWarn: { [Player]: number } = {}
 local rng = Random.new()
 
 local coreHp = World.Core.hp
@@ -102,6 +104,47 @@ spawnCell = function(i: number, j: number, k: number)
 	part.Parent = folder
 
 	local cell = { part = part, hp = layer.hp, maxHp = layer.hp, layer = layer, layerIndex = k, i = i, j = j, k = k }
+
+	-- Block specials: lava (hazard layers), golden treasure, visible ore veins.
+	if layer.hazard and rng:NextNumber() < World.LavaChance then
+		cell.lava = true
+		cell.hp, cell.maxHp = 6, 6
+		part.Color = Color3.fromRGB(255, 95, 30)
+		part.Material = Enum.Material.Neon
+		part.Touched:Connect(function(hitPart)
+			local humanoid = hitPart.Parent and hitPart.Parent:FindFirstChildOfClass("Humanoid")
+			if humanoid and os.clock() - (humanoid:GetAttribute("LavaT") or 0) > 1 then
+				humanoid:SetAttribute("LavaT", os.clock())
+				humanoid:TakeDamage(World.LavaDamage)
+			end
+		end)
+	elseif rng:NextNumber() < World.TreasureChance then
+		cell.treasure = true
+		part.Color = Color3.fromRGB(235, 185, 80)
+		part.Material = Enum.Material.Metal
+	elseif #layer.ores > 0 and rng:NextNumber() < World.VeinChance then
+		-- pick an ore weighted by its layer chance, tint the block toward it
+		local total = 0
+		for _, ore in layer.ores do
+			total += ore.chance
+		end
+		local roll = rng:NextNumber() * total
+		for _, ore in layer.ores do
+			roll -= ore.chance
+			if roll <= 0 then
+				cell.vein = ore.id
+				break
+			end
+		end
+		local oc = World.Items[cell.vein].color
+		local lc = layer.color
+		part.Color = Color3.fromRGB(
+			lc[1] * 0.35 + oc[1] * 0.65,
+			lc[2] * 0.35 + oc[2] * 0.65,
+			lc[3] * 0.35 + oc[3] * 0.65
+		)
+	end
+
 	cells[cellKey] = cell
 
 	local click = Instance.new("ClickDetector")
@@ -134,29 +177,49 @@ function Terrain.hit(player: Player, cell, cellKey: string)
 	if not swingAllowed(player) or not inReach(player, cell.part.Position) then
 		return
 	end
-	if Inventory.isFull(player) then
-		notify(player, "Backpack full! Sell your loot.", Color3.fromRGB(255, 80, 80))
+	if not cell.lava and Inventory.isFull(player) then
+		if os.clock() - (lastFullWarn[player] or 0) > 2 then
+			lastFullWarn[player] = os.clock()
+			notify(player, "Backpack full! Sell your loot.", Color3.fromRGB(255, 80, 80))
+		end
 		return
 	end
 
 	local dmg, luck = Tools.stats(player)
 	cell.hp -= dmg
 	if cell.hp > 0 then
-		-- darken toward broken
+		-- darken toward broken (specials keep their look, just dim)
 		local f = 0.45 + 0.55 * (cell.hp / cell.maxHp)
-		local c = cell.layer.color
-		cell.part.Color = Color3.fromRGB(c[1] * f, c[2] * f, c[3] * f)
+		local base = cell.part.Color
+		cell.part.Color = Color3.new(base.R * f + base.R * (1 - f) * 0.2, base.G * f, base.B * f)
 		return
 	end
 
 	cells[cellKey] = "mined"
 	cell.part:Destroy()
-	Inventory.award(player, cell.layer, cell.layerIndex, luck)
+	if cell.lava then
+		-- lava yields nothing, breaking it just clears the path
+	elseif cell.treasure then
+		Inventory.awardTreasure(player, cell.layer)
+	else
+		Inventory.award(player, cell.layer, cell.layerIndex, luck)
+		if cell.vein then
+			Inventory.awardVein(player, cell.vein, rng:NextInteger(World.VeinYield.min, World.VeinYield.max))
+		end
+	end
+	Contracts.onBlock(player)
 
-	if cell.k and cell.k > (player:GetAttribute("Depth") or 0) then
+	local oldDepth = player:GetAttribute("Depth") or 0
+	if cell.k and cell.k > oldDepth then
 		player:SetAttribute("Depth", cell.k)
+		Contracts.onDepth(player, cell.k)
 		if cell.k > (player:GetAttribute("DepthBest") or 0) then
 			player:SetAttribute("DepthBest", cell.k)
+		end
+		-- celebrate entering a new layer
+		local newLayer = World.layerAt(cell.k)
+		if newLayer ~= World.layerAt(math.max(oldDepth, 1)) then
+			notify(player, ("You reached %s! Better loot down here."):format(newLayer.name), Color3.fromRGB(90, 220, 255))
 		end
 	end
 
@@ -256,6 +319,7 @@ end
 
 function Terrain.onPlayerRemoving(player: Player)
 	lastSwing[player] = nil
+	lastFullWarn[player] = nil
 end
 
 return Terrain

@@ -17,6 +17,8 @@ local function defaultProfile()
 		relics = {},
 		donated = {},
 		depthBest = 0,
+		contracts = {},
+		contractsDay = 0,
 		streak = 0,
 		lastDaily = 0,
 		lastSeen = 0,

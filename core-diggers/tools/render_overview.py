@@ -73,7 +73,19 @@ def main():
         c = layer["color"]
         jit = random.randint(-7, 7)
         col = tuple(max(0, min(255, int(v + jit))) for v in c)
-        parts.append({"s": [bs, bs, bs], "p": list(pos(i, j, k)), "c": col})
+        spec = {"s": [bs, bs, bs], "p": list(pos(i, j, k)), "c": col}
+        # mirror the in-game block specials so the preview matches gameplay
+        r = random.random()
+        if layer.get("hazard") and r < 0.05:
+            spec["c"] = (255, 95, 30)
+            spec["m"] = "Neon"
+        elif r < 0.005:
+            spec["c"] = (235, 185, 80)
+        elif r < 0.075 and layer["ores"]:
+            ore = random.choice(layer["ores"])
+            oc = data["items"][ore["id"]]["color"]
+            spec["c"] = tuple(int(cc * 0.35 + occ * 0.65) for cc, occ in zip(c, oc))
+        parts.append(spec)
 
     # The core glows at the bottom of the deepest shaft (artistic stand-in for
     # the real one under the island center).

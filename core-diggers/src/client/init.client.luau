@@ -37,6 +37,12 @@ local badSound = Instance.new("Sound")
 badSound.SoundId = "rbxasset://sounds/snap.mp3"
 badSound.Volume = 0.5
 badSound.Parent = SoundService
+-- soft tick whenever loot lands in the bag (same asset, pitched up)
+local digSound = Instance.new("Sound")
+digSound.SoundId = "rbxasset://sounds/electronicpingshort.wav"
+digSound.Volume = 0.12
+digSound.PlaybackSpeed = 1.7
+digSound.Parent = SoundService
 
 local function styleFrame(frame: GuiObject, strokeColor: Color3?)
 	frame.BackgroundColor3 = Color3.fromRGB(18, 20, 28)
@@ -188,6 +194,7 @@ end
 
 local shopPanel, shopContent = makePanel("SHOVEL SHOP")
 local museumPanel, museumContent = makePanel("MUSEUM — YOUR RELICS")
+local contractsPanel, contractsContent = makePanel("DAILY CONTRACTS")
 
 local function rowButton(parent: Instance, height: number): TextButton
 	local button = Instance.new("TextButton")
@@ -321,15 +328,71 @@ local function refreshMuseum()
 	end
 end
 
+local function refreshContracts()
+	for _, child in contractsContent:GetChildren() do
+		if child:IsA("TextLabel") or child:IsA("Frame") then
+			child:Destroy()
+		end
+	end
+	for i = 1, 3 do
+		local raw = player:GetAttribute("contract_" .. i)
+		if typeof(raw) == "string" and raw ~= "" then
+			local desc, have, need, reward, done = raw:match("^(.*)|(%d+)|(%d+)|(%d+)|(%d)$")
+			if desc then
+				local isDone = done == "1"
+				makeLabel(contractsContent, {
+					Size = UDim2.new(1, 0, 0, 30),
+					TextXAlignment = Enum.TextXAlignment.Left,
+					Text = (isDone and "✔ " or "• ") .. desc,
+					TextColor3 = isDone and Color3.fromRGB(120, 255, 120) or Color3.new(1, 1, 1),
+				})
+				makeLabel(contractsContent, {
+					Size = UDim2.new(1, 0, 0, 22),
+					TextXAlignment = Enum.TextXAlignment.Left,
+					Text = ("    %s/%s  ·  Reward $%s"):format(have, need, reward),
+					TextColor3 = Color3.fromRGB(170, 175, 190),
+				})
+				-- progress bar
+				local bar = Instance.new("Frame")
+				bar.Size = UDim2.new(1, -8, 0, 8)
+				bar.BackgroundColor3 = Color3.fromRGB(45, 48, 60)
+				bar.BorderSizePixel = 0
+				bar.Parent = contractsContent
+				local barCorner = Instance.new("UICorner")
+				barCorner.CornerRadius = UDim.new(0, 4)
+				barCorner.Parent = bar
+				local fill = Instance.new("Frame")
+				fill.Size = UDim2.new(math.clamp(tonumber(have) :: number / (tonumber(need) :: number), 0, 1), 0, 1, 0)
+				fill.BackgroundColor3 = isDone and Color3.fromRGB(120, 255, 120) or Color3.fromRGB(90, 220, 255)
+				fill.BorderSizePixel = 0
+				fill.Parent = bar
+				local fillCorner = Instance.new("UICorner")
+				fillCorner.CornerRadius = UDim.new(0, 4)
+				fillCorner.Parent = fill
+			end
+		end
+	end
+	makeLabel(contractsContent, {
+		Size = UDim2.new(1, 0, 0, 24),
+		Text = "New contracts every day!",
+		TextColor3 = Color3.fromRGB(120, 220, 255),
+	})
+end
+
+local panels = { shopPanel, museumPanel, contractsPanel }
+local function showPanel(panel: Frame?)
+	for _, p in panels do
+		p.Visible = (p == panel)
+	end
+end
+
 remotes.OpenUI.OnClientEvent:Connect(function(which: string)
 	if which == "shop" then
 		refreshShop()
-		shopPanel.Visible = true
-		museumPanel.Visible = false
+		showPanel(shopPanel)
 	elseif which == "museum" then
 		refreshMuseum()
-		museumPanel.Visible = true
-		shopPanel.Visible = false
+		showPanel(museumPanel)
 	end
 end)
 
@@ -358,13 +421,15 @@ bottomButton("SELL", 130, Color3.fromRGB(60, 130, 90)).Activated:Connect(functio
 end)
 bottomButton("SHOP", 260, Color3.fromRGB(40, 44, 58)).Activated:Connect(function()
 	refreshShop()
-	shopPanel.Visible = not shopPanel.Visible
-	museumPanel.Visible = false
+	showPanel(shopPanel.Visible and nil or shopPanel)
 end)
 bottomButton("MUSEUM", 390, Color3.fromRGB(40, 44, 58)).Activated:Connect(function()
 	refreshMuseum()
-	museumPanel.Visible = not museumPanel.Visible
-	shopPanel.Visible = false
+	showPanel(museumPanel.Visible and nil or museumPanel)
+end)
+bottomButton("QUESTS", 520, Color3.fromRGB(40, 44, 58)).Activated:Connect(function()
+	refreshContracts()
+	showPanel(contractsPanel.Visible and nil or contractsPanel)
 end)
 
 -- Live bindings --------------------------------------------------------------
@@ -397,7 +462,22 @@ local function updatePrestige()
 		or "Crack the core for prestige!"
 end
 
-player:GetAttributeChangedSignal("Bag"):Connect(updateBag)
+local lastBag = 0
+player:GetAttributeChangedSignal("Bag"):Connect(function()
+	local bag = player:GetAttribute("Bag") or 0
+	if bag > lastBag then
+		digSound:Play()
+	end
+	lastBag = bag
+	updateBag()
+end)
+for i = 1, 3 do
+	player:GetAttributeChangedSignal("contract_" .. i):Connect(function()
+		if contractsPanel.Visible then
+			refreshContracts()
+		end
+	end)
+end
 player:GetAttributeChangedSignal("BagCap"):Connect(updateBag)
 player:GetAttributeChangedSignal("Depth"):Connect(updateDepth)
 player:GetAttributeChangedSignal("Prestige"):Connect(updatePrestige)

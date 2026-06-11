@@ -18,8 +18,14 @@ Schicht, bis zum glühenden **KERN**.
    oder für Sofort-Cash verkaufen. Echte Entscheidung.
 5. **DER KERN** (Layer 36): knacken = **Prestige** (+50 % Verkaufswert für immer,
    serverweite Ansage), Kern respawnt für die Nächsten.
-6. **Meteor-Events** alle 12 Min: glühender Erz-Cluster schlägt auf der Oberfläche ein.
-7. Daily-Streak-Bonus, globales **„Deepest Diggers"-Leaderboard** (OrderedDataStore).
+6. **Block-Specials** (beim Spawnen gerollt): sichtbare **Erz-Adern** (~7 %, getönt,
+   garantiert 2–4 Erze), goldene **Schatzblöcke** (Cash-Burst) und **Lava-Blöcke**
+   in Magma/Void (35 Schaden bei Berührung — Tiefe ist Gefahr).
+7. **Meteor-Events** alle 12 Min: glühender Erz-Cluster schlägt auf der Oberfläche ein.
+8. **3 Daily Contracts** (QUESTS-Button): „Brich 150 Blöcke", „Sammle 5 Gold",
+   „Erreiche Layer 22" … — Auto-Belohnung bei Abschluss, täglich neu.
+9. Schicht-Meilensteine („You reached Ice Crust!"), Daily-Streak-Bonus, globales
+   **„Deepest Diggers"-Leaderboard** (OrderedDataStore).
 
 ## Warum dieses Genre hält (Retention-Logik)
 

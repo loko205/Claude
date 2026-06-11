@@ -26,6 +26,7 @@ local Tools = require(script.Tools)
 local Museum = require(script.Museum)
 local Monetize = require(script.Monetize)
 local Leaderboard = require(script.Leaderboard)
+local Contracts = require(script.Contracts)
 
 local keyed = Camp.build()
 Terrain.init()
@@ -103,6 +104,7 @@ local function onPlayerAdded(player: Player)
 	player:SetAttribute("DepthBest", profile.depthBest)
 	Economy.setup(player, profile.cash)
 	Inventory.register(player, profile)
+	Contracts.register(player, profile)
 
 	player.CharacterAdded:Connect(function()
 		task.wait(0.2)
@@ -136,6 +138,7 @@ local function onPlayerRemoving(player: Player)
 		profiles[player] = nil
 	end
 	Inventory.unregister(player)
+	Contracts.unregister(player)
 end
 
 Players.PlayerAdded:Connect(onPlayerAdded)
@@ -165,8 +168,9 @@ remotes.Buy.OnServerEvent:Connect(function(player, kind, id)
 		Tools.give(player)
 		notify(player, ("Equipped %s!"):format(shovel.name), Color3.fromRGB(120, 255, 120))
 	elseif kind == "pack" then
-		local pack = World.backpack(tonumber(id) or 0)
-		if pack.id ~= id or pack.id == profile.pack then
+		local packId = tonumber(id) or 0
+		local pack = World.backpack(packId)
+		if pack.id ~= packId or pack.id == profile.pack then
 			return
 		end
 		if not Economy.trySpend(player, pack.price) then

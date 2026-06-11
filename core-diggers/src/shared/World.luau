@@ -16,11 +16,11 @@ World.Layers = {
 	{ name = "Ice Crust", from = 17, to = 22, hp = 16, color = { 165, 205, 225 }, material = "Ice",
 		matId = "permafrost", ores = { { id = "sapphire", chance = 0.06 }, { id = "frost_crystal", chance = 0.025 }, { id = "gold", chance = 0.04 } } },
 	{ name = "Magma Rock", from = 23, to = 28, hp = 26, color = { 105, 58, 46 }, material = "Basalt",
-		matId = "magmarock", ores = { { id = "ruby", chance = 0.06 }, { id = "obsidian", chance = 0.035 } } },
+		matId = "magmarock", hazard = true, ores = { { id = "ruby", chance = 0.06 }, { id = "obsidian", chance = 0.035 } } },
 	{ name = "Crystal Cavern", from = 29, to = 33, hp = 38, color = { 150, 110, 200 }, material = "Slate",
 		matId = "crystalrock", ores = { { id = "diamond", chance = 0.05 }, { id = "prism_shard", chance = 0.025 } } },
 	{ name = "Void Basalt", from = 34, to = 36, hp = 55, color = { 42, 40, 54 }, material = "Basalt",
-		matId = "voidrock", ores = { { id = "starmetal", chance = 0.05 }, { id = "void_pearl", chance = 0.02 } } },
+		matId = "voidrock", hazard = true, ores = { { id = "starmetal", chance = 0.05 }, { id = "void_pearl", chance = 0.02 } } },
 }
 
 -- Meteor event blocks (land on the surface, guaranteed-rich).
@@ -98,6 +98,35 @@ World.Backpacks = {
 -- THE CORE: a shared glowing block under the island center. Breaking it grants
 -- prestige (+50% sell value each) and respawns for the next digger.
 World.Core = { hp = 150, respawn = 60, prestigeBonus = 0.5 }
+
+-- Block specials rolled at spawn time: visible ore veins (guaranteed yield),
+-- golden treasure blocks (cash burst) and lava blocks in hazard layers.
+World.VeinChance = 0.07
+World.VeinYield = { min = 2, max = 4 }
+World.TreasureChance = 0.005
+World.TreasureMult = { min = 20, max = 40 } -- x layer material value
+World.LavaChance = 0.05
+World.LavaDamage = 35
+
+-- Three random daily contracts, auto-claimed on completion.
+World.DailyContracts = 3
+World.ContractPool = {
+	{ type = "blocks", need = 60, reward = 300 },
+	{ type = "blocks", need = 150, reward = 900 },
+	{ type = "blocks", need = 400, reward = 3000 },
+	{ type = "ore", id = "coal", need = 10, reward = 250 },
+	{ type = "ore", id = "iron", need = 8, reward = 600 },
+	{ type = "ore", id = "gold", need = 5, reward = 1500 },
+	{ type = "ore", id = "sapphire", need = 3, reward = 3500 },
+	{ type = "ore", id = "ruby", need = 2, reward = 7000 },
+	{ type = "ore", id = "diamond", need = 1, reward = 12000 },
+	{ type = "sell", need = 2000, reward = 500 },
+	{ type = "sell", need = 15000, reward = 2500 },
+	{ type = "sell", need = 80000, reward = 10000 },
+	{ type = "depth", need = 10, reward = 400 },
+	{ type = "depth", need = 22, reward = 2000 },
+	{ type = "depth", need = 30, reward = 8000 },
+}
 
 World.SwingCooldown = 0.25
 World.MeteorInterval = 12 * 60
