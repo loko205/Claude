@@ -7,6 +7,7 @@ local World = require(ReplicatedStorage.Shared.World)
 local Inventory = require(script.Parent.Inventory)
 local Tools = require(script.Parent.Tools)
 local Contracts = require(script.Parent.Contracts)
+local Buffs = require(script.Parent.Buffs)
 
 local Terrain = {}
 
@@ -200,9 +201,68 @@ spawnCell = function(i: number, j: number, k: number, skipDecor: boolean?)
 	end
 end
 
+-- Break burst: short particle puff in the block's color.
+local function breakFx(position: Vector3, color: Color3)
+	local holder = Instance.new("Part")
+	holder.Anchored = true
+	holder.CanCollide = false
+	holder.CanQuery = false
+	holder.Transparency = 1
+	holder.Size = Vector3.one
+	holder.Position = position
+	local emitter = Instance.new("ParticleEmitter")
+	emitter.Color = ColorSequence.new(color)
+	emitter.Lifetime = NumberRange.new(0.25, 0.5)
+	emitter.Speed = NumberRange.new(6, 11)
+	emitter.SpreadAngle = Vector2.new(180, 180)
+	emitter.Size = NumberSequence.new(0.4)
+	emitter.Rate = 0
+	emitter.Parent = holder
+	holder.Parent = folder
+	emitter:Emit(14)
+	task.delay(1, function()
+		holder:Destroy()
+	end)
+end
+
+-- Small rising text ("+24.5kg Gold", "CRIT!") at a block position.
+local function floatText(position: Vector3, text: string, color: Color3)
+	local holder = Instance.new("Part")
+	holder.Anchored = true
+	holder.CanCollide = false
+	holder.CanQuery = false
+	holder.Transparency = 1
+	holder.Size = Vector3.one
+	holder.Position = position
+	local gui = Instance.new("BillboardGui")
+	gui.Size = UDim2.new(0, 140, 0, 32)
+	gui.AlwaysOnTop = true
+	gui.MaxDistance = 60
+	gui.Parent = holder
+	local label = Instance.new("TextLabel")
+	label.BackgroundTransparency = 1
+	label.Size = UDim2.fromScale(1, 1)
+	label.Font = Enum.Font.FredokaOne
+	label.Text = text
+	label.TextColor3 = color
+	label.TextScaled = true
+	label.TextStrokeTransparency = 0.3
+	label.Parent = gui
+	holder.Parent = folder
+	task.spawn(function()
+		for step = 1, 10 do
+			holder.Position += Vector3.new(0, 0.3, 0)
+			label.TextTransparency = step / 12
+			task.wait(0.06)
+		end
+		holder:Destroy()
+	end)
+end
+
 local function swingAllowed(player: Player): boolean
 	local now = os.clock()
-	if now - (lastSwing[player] or 0) < World.SwingCooldown then
+	local cooldown = World.SwingCooldown * (Buffs.has(player, "speed") and 0.5 or 1)
+	if now - (lastSwing[player] or 0) < cooldown then
 		return false
 	end
 	lastSwing[player] = now
@@ -231,23 +291,55 @@ function Terrain.hit(player: Player, cell, cellKey: string)
 	end
 
 	local dmg, luck = Tools.stats(player)
+
+	-- Critical digs: hitting a gold-flashing block deals triple damage.
+	if cell.critUntil and os.clock() < cell.critUntil then
+		dmg *= World.CritMult
+		cell.critUntil = nil
+		floatText(cell.part.Position + Vector3.new(0, BS / 2, 0), "CRIT!", Color3.fromRGB(255, 220, 90))
+	elseif not cell.critUntil and cell.hp - dmg > 0 and rng:NextNumber() < World.CritChance then
+		cell.critUntil = os.clock() + World.CritWindow
+		local baseColor, baseMaterial = cell.part.Color, cell.part.Material
+		cell.part.Color = Color3.fromRGB(255, 220, 90)
+		cell.part.Material = Enum.Material.Neon
+		task.delay(World.CritWindow, function()
+			if cells[cellKey] == cell and cell.part.Parent then
+				cell.critUntil = nil
+				cell.part.Color = baseColor
+				cell.part.Material = baseMaterial
+			end
+		end)
+	end
+
 	cell.hp -= dmg
 	if cell.hp > 0 then
-		-- darken toward broken (specials keep their look, just dim)
-		local f = 0.45 + 0.55 * (cell.hp / cell.maxHp)
-		local base = cell.part.Color
-		cell.part.Color = Color3.new(base.R * f + base.R * (1 - f) * 0.2, base.G * f, base.B * f)
+		if not cell.critUntil then
+			-- darken toward broken (specials keep their look, just dim)
+			local f = 0.45 + 0.55 * (cell.hp / cell.maxHp)
+			local base = cell.part.Color
+			cell.part.Color = Color3.new(base.R * f + base.R * (1 - f) * 0.2, base.G * f, base.B * f)
+		end
 		return
 	end
 
+	local blockPosition = cell.part.Position
+	local blockColor = cell.part.Color
 	cells[cellKey] = "mined"
 	cell.part:Destroy()
+	breakFx(blockPosition, blockColor)
 	if cell.lava then
 		-- lava yields nothing, breaking it just clears the path
 	elseif cell.treasure then
 		Inventory.awardTreasure(player, cell.layer)
 	else
-		Inventory.award(player, cell.layer, cell.layerIndex, luck)
+		local find = Inventory.award(player, cell.layer, cell.layerIndex, luck)
+		if find then
+			floatText(
+				blockPosition,
+				("+%s %s%s"):format(find.kg, find.shiny and "SHINY " or "", find.name),
+				Color3.fromRGB(find.color[1], find.color[2], find.color[3])
+			)
+		end
 		if cell.vein then
 			Inventory.awardVein(player, cell.vein, rng:NextInteger(World.VeinYield.min, World.VeinYield.max))
 		end

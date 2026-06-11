@@ -128,6 +128,26 @@ World.ContractPool = {
 	{ type = "depth", need = 30, reward = 8000 },
 }
 
+-- Weight rolls: every ore find rolls a weight (value multiplier, cubic curve
+-- so big finds are rare); jackpot finds announce server-wide.
+World.WeightCurve = { min = 0.4, max = 8 }
+World.JackpotChance = 0.01
+World.JackpotMult = { min = 8, max = 25 }
+World.KgPerMult = 6 -- display: weight mult * this = kg
+
+-- Critical digs: blocks sometimes flash gold; hitting them in the window
+-- deals triple damage.
+World.CritChance = 0.22
+World.CritWindow = 0.7
+World.CritMult = 3
+
+-- Potions: timed buffs, bought with cash at the shop.
+World.Potions = {
+	{ id = "luck", name = "Luck Potion", desc = "+50% luck for 5 min", price = 2000, duration = 300 },
+	{ id = "speed", name = "Haste Potion", desc = "2x dig speed for 5 min", price = 1500, duration = 300 },
+	{ id = "strength", name = "Power Potion", desc = "+50% damage for 5 min", price = 2500, duration = 300 },
+}
+
 World.SwingCooldown = 0.25
 World.MeteorInterval = 12 * 60
 World.MeteorLifetime = 150

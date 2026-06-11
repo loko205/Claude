@@ -3,12 +3,21 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local World = require(ReplicatedStorage.Shared.World)
 local Monetize = require(script.Parent.Monetize)
+local Buffs = require(script.Parent.Buffs)
 
 local Tools = {}
 
 function Tools.stats(player: Player)
 	local shovel = World.shovel(player:GetAttribute("Shovel") or "rusty")
-	return shovel.dmg, shovel.luck + Monetize.luckBonus(player)
+	local dmg = shovel.dmg
+	if Buffs.has(player, "strength") then
+		dmg = math.floor(dmg * 1.5 + 0.5)
+	end
+	local luck = shovel.luck + Monetize.luckBonus(player)
+	if Buffs.has(player, "luck") then
+		luck += 0.5
+	end
+	return dmg, luck
 end
 
 local function buildTool(shovel): Tool

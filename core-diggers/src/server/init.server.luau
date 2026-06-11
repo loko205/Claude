@@ -27,6 +27,7 @@ local Museum = require(script.Museum)
 local Monetize = require(script.Monetize)
 local Leaderboard = require(script.Leaderboard)
 local Contracts = require(script.Contracts)
+local Buffs = require(script.Buffs)
 
 local keyed = Camp.build()
 Terrain.init()
@@ -129,6 +130,7 @@ end
 local function onPlayerRemoving(player: Player)
 	Terrain.onPlayerRemoving(player)
 	Monetize.onPlayerRemoving(player)
+	Buffs.onPlayerRemoving(player)
 	teleportReady[player] = nil
 	local profile = profiles[player]
 	if profile then
@@ -181,6 +183,18 @@ remotes.Buy.OnServerEvent:Connect(function(player, kind, id)
 		player:SetAttribute("Pack", pack.id)
 		Inventory.register(player, profile) -- refresh capacity attributes
 		notify(player, ("Equipped %s (%d slots)!"):format(pack.name, pack.cap), Color3.fromRGB(120, 255, 120))
+	elseif kind == "potion" then
+		for _, potion in World.Potions do
+			if potion.id == id then
+				if not Economy.trySpend(player, potion.price) then
+					notify(player, "Not enough cash!", Color3.fromRGB(255, 80, 80))
+					return
+				end
+				Buffs.grant(player, potion.id, potion.duration)
+				notify(player, ("%s active: %s!"):format(potion.name, potion.desc), Color3.fromRGB(190, 120, 235))
+				return
+			end
+		end
 	end
 end)
 

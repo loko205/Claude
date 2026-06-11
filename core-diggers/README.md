@@ -27,6 +27,17 @@ Schicht, bis zum glühenden **KERN**.
 9. Schicht-Meilensteine („You reached Ice Crust!"), Daily-Streak-Bonus, globales
    **„Deepest Diggers"-Leaderboard** (OrderedDataStore).
 
+## Mechanik-Tiefe (v2)
+
+- **Gewichts-Rolls:** Jeder Erzfund rollt ein Gewicht (kubische Kurve, 0.4x–8x Wert);
+  1 % **Jackpot-Funde** (8x–25x) mit serverweiter Ansage — jeder Fund ist ein
+  Slot-Machine-Moment statt eines flachen Zählers.
+- **Critical Digs:** Blöcke flashen zufällig gold (~0,7 s) — wer im Fenster trifft,
+  macht 3x Schaden. Timing-Skill statt stumpfem Klicken.
+- **Tränke:** Luck/Haste/Power (5 Min, Cash-Sink) mit Live-Countdown im HUD.
+- **Juice:** Partikel-Burst in Blockfarbe bei jedem Bruch, aufsteigender Floating-Text
+  („+24.5kg Gold", „CRIT!"), Grab-Sound, Schicht-Meilensteine.
+
 ## Warum dieses Genre hält (Retention-Logik)
 
 - **„Eine Schicht noch"**: Tiefe ist sichtbarer Fortschritt — der Minecraft-Sog.

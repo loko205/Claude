@@ -105,6 +105,33 @@ local prestigeLabel = makeLabel(statsPanel, {
 	TextColor3 = Color3.fromRGB(255, 205, 80),
 	Text = "",
 })
+local buffsLabel = makeLabel(statsPanel, {
+	Position = UDim2.new(0, 16, 0, 128),
+	Size = UDim2.new(1, -32, 0, 22),
+	TextXAlignment = Enum.TextXAlignment.Left,
+	TextColor3 = Color3.fromRGB(190, 120, 235),
+	Text = "",
+})
+statsPanel.Size = UDim2.new(0, 260, 0, 158)
+
+-- live buff countdowns (expiry attributes hold os.time() timestamps)
+task.spawn(function()
+	local names = { luck = "Luck", speed = "Haste", strength = "Power" }
+	while true do
+		local parts = {}
+		for id, label in names do
+			local expiry = player:GetAttribute("buff_" .. id)
+			if typeof(expiry) == "number" then
+				local left = expiry - os.time()
+				if left > 0 then
+					table.insert(parts, ("%s %d:%02d"):format(label, left // 60, left % 60))
+				end
+			end
+		end
+		buffsLabel.Text = table.concat(parts, "  ")
+		task.wait(1)
+	end
+end)
 
 -- Notifications ------------------------------------------------------------
 local feed = Instance.new("Frame")
@@ -253,6 +280,16 @@ local function refreshShop()
 				refreshShop()
 			end)
 		end
+	end
+
+	makeLabel(shopContent, { Size = UDim2.new(1, 0, 0, 26), Text = "POTIONS", TextColor3 = Color3.fromRGB(190, 120, 235) })
+	for _, potion in World.Potions do
+		local button = rowButton(shopContent, 38)
+		button.BackgroundColor3 = Color3.fromRGB(86, 60, 120)
+		button.Text = ("%s — %s — $%s"):format(potion.name, potion.desc, fmt(potion.price))
+		button.Activated:Connect(function()
+			remotes.Buy:FireServer("potion", potion.id)
+		end)
 	end
 
 	-- Robux section (entries appear once ids are configured in World.luau)

@@ -16,12 +16,36 @@ local function notify(player: Player, text: string, color: Color3?)
 	ReplicatedStorage.Remotes.Notify:FireClient(player, text, color)
 end
 
+-- inv entries are { n = count, v = accumulated rolled value }.
 local function bagCount(profile): number
 	local n = 0
-	for _, count in profile.inv do
-		n += count
+	for _, entry in profile.inv do
+		n += entry.n
 	end
 	return n
+end
+
+local function addItem(profile, key: string, value: number)
+	local entry = profile.inv[key]
+	if not entry then
+		entry = { n = 0, v = 0 }
+		profile.inv[key] = entry
+	end
+	entry.n += 1
+	entry.v += value
+end
+
+-- Weight roll: cubic curve, rare jackpot tail. Returns value mult + jackpot flag.
+local function rollWeight(): (number, boolean)
+	if rng:NextNumber() < World.JackpotChance then
+		return rng:NextNumber(World.JackpotMult.min, World.JackpotMult.max), true
+	end
+	local t = rng:NextNumber()
+	return World.WeightCurve.min + (World.WeightCurve.max - World.WeightCurve.min) * t * t * t, false
+end
+
+local function kgText(mult: number): string
+	return ("%.1fkg"):format(mult * World.KgPerMult)
 end
 
 -- Light sync for the hot mining path (full relic sync only when relics change).
@@ -46,6 +70,12 @@ local function syncAttrs(player: Player)
 end
 
 function Inventory.register(player: Player, profile)
+	-- migrate pre-weight saves (plain counts) to { n, v } entries
+	for key, entry in profile.inv do
+		if type(entry) == "number" then
+			profile.inv[key] = { n = entry, v = entry * Inventory.itemValue(key) }
+		end
+	end
 	profiles[player] = profile
 	syncAttrs(player)
 end
@@ -92,20 +122,28 @@ function Inventory.award(player: Player, layerLike, layerIndex: number, luck: nu
 		return
 	end
 
-	profile.inv[layerLike.matId] = (profile.inv[layerLike.matId] or 0) + 1
+	addItem(profile, layerLike.matId, World.Items[layerLike.matId].value)
 
+	local find = nil
 	for _, ore in layerLike.ores do
 		if rng:NextNumber() < ore.chance * (1 + luck) then
 			local id = ore.id
 			local shiny = rng:NextNumber() < World.ShinyChance
-			local key = shiny and "shiny_" .. id or id
-			profile.inv[key] = (profile.inv[key] or 0) + 1
-			Contracts.onOre(player, id, 1)
+			local mult, jackpot = rollWeight()
 			local item = World.Items[id]
-			if shiny then
-				notify(player, ("SHINY %s! (worth %dx)"):format(item.name, World.ShinyMult), Color3.fromRGB(255, 230, 120))
+			local value = math.floor(item.value * mult * (shiny and World.ShinyMult or 1))
+			addItem(profile, shiny and "shiny_" .. id or id, value)
+			Contracts.onOre(player, id, 1)
+			find = { name = item.name, kg = kgText(mult), shiny = shiny, color = item.color }
+			if jackpot then
+				ReplicatedStorage.Remotes.Notify:FireAllClients(
+					("%s dug up a COLOSSAL %s %s (worth $%d)!"):format(player.DisplayName, kgText(mult), item.name, value),
+					Color3.fromRGB(255, 205, 80)
+				)
+			elseif shiny then
+				notify(player, ("SHINY %s %s! (worth %dx)"):format(kgText(mult), item.name, World.ShinyMult), Color3.fromRGB(255, 230, 120))
 			elseif item.value >= 300 then
-				notify(player, ("Found %s!"):format(item.name), Color3.fromRGB(item.color[1], item.color[2], item.color[3]))
+				notify(player, ("Found %s %s!"):format(kgText(mult), item.name), Color3.fromRGB(item.color[1], item.color[2], item.color[3]))
 			end
 			break
 		end
@@ -128,28 +166,31 @@ function Inventory.award(player: Player, layerLike, layerIndex: number, luck: nu
 	end
 
 	syncBag(player)
+	return find
 end
 
--- Visible ore veins pay out a guaranteed bundle.
+-- Visible ore veins pay out a guaranteed bundle (each piece weight-rolled).
 function Inventory.awardVein(player: Player, oreId: string, count: number)
 	local profile = profiles[player]
 	if not profile then
 		return
 	end
+	local item = World.Items[oreId]
 	local shinies = 0
+	local totalKg = 0
 	for _ = 1, count do
 		local shiny = rng:NextNumber() < World.ShinyChance
-		local key = shiny and "shiny_" .. oreId or oreId
-		profile.inv[key] = (profile.inv[key] or 0) + 1
+		local mult = select(1, rollWeight())
+		totalKg += mult * World.KgPerMult
+		addItem(profile, shiny and "shiny_" .. oreId or oreId, math.floor(item.value * mult * (shiny and World.ShinyMult or 1)))
 		if shiny then
 			shinies += 1
 		end
 	end
 	Contracts.onOre(player, oreId, count)
-	local item = World.Items[oreId]
 	notify(
 		player,
-		("ORE VEIN: %dx %s%s!"):format(count, item.name, shinies > 0 and (" (%d SHINY!)"):format(shinies) or ""),
+		("ORE VEIN: %dx %s (%.0fkg)%s!"):format(count, item.name, totalKg, shinies > 0 and (" (%d SHINY!)"):format(shinies) or ""),
 		Color3.fromRGB(item.color[1], item.color[2], item.color[3])
 	)
 	syncBag(player)
@@ -192,8 +233,8 @@ function Inventory.sellAll(player: Player): number
 		return 0
 	end
 	local total = 0
-	for key, count in profile.inv do
-		total += Inventory.itemValue(key) * count
+	for _, entry in profile.inv do
+		total += entry.v
 	end
 	total = math.floor(total * Inventory.sellMultiplier(player))
 	if total > 0 then
