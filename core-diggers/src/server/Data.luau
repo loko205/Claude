@@ -14,6 +14,8 @@ local function defaultProfile()
 		shovel = "rusty",
 		pack = 1,
 		inv = {},
+		gear = {},
+		perks = {},
 		relics = {},
 		donated = {},
 		depthBest = 0,

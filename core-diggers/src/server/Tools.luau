@@ -13,7 +13,7 @@ function Tools.stats(player: Player)
 	if Buffs.has(player, "strength") then
 		dmg = math.floor(dmg * 1.5 + 0.5)
 	end
-	local luck = shovel.luck + Monetize.luckBonus(player)
+	local luck = shovel.luck + Monetize.luckBonus(player) + 0.06 * (player:GetAttribute("perk_prospector") or 0)
 	if Buffs.has(player, "luck") then
 		luck += 0.5
 	end

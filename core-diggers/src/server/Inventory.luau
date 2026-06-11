@@ -62,10 +62,17 @@ local function syncAttrs(player: Player)
 		return
 	end
 	player:SetAttribute("Bag", bagCount(profile))
-	player:SetAttribute("BagCap", World.backpack(profile.pack).cap + Monetize.capBonus(player))
+	local hauler = profile.perks and profile.perks.hauler or 0
+	player:SetAttribute("BagCap", math.floor((World.backpack(profile.pack).cap + Monetize.capBonus(player)) * (1 + 0.10 * hauler)))
 	for _, relic in World.Relics do
 		player:SetAttribute("relic_" .. relic.id, profile.relics[relic.id] or 0)
 		player:SetAttribute("don_" .. relic.id, profile.donated[relic.id] == true)
+	end
+end
+
+local function syncGear(player: Player, profile)
+	for _, recipe in World.Recipes do
+		player:SetAttribute("gear_" .. recipe.id, profile.gear[recipe.id] or 0)
 	end
 end
 
@@ -76,8 +83,11 @@ function Inventory.register(player: Player, profile)
 			profile.inv[key] = { n = entry, v = entry * Inventory.itemValue(key) }
 		end
 	end
+	profile.gear = profile.gear or {}
+	profile.perks = profile.perks or {}
 	profiles[player] = profile
 	syncAttrs(player)
+	syncGear(player, profile)
 end
 
 function Inventory.unregister(player: Player)
@@ -88,12 +98,90 @@ function Inventory.get(player: Player)
 	return profiles[player]
 end
 
+local function capacity(player: Player, profile): number
+	local hauler = profile.perks and profile.perks.hauler or 0
+	return math.floor((World.backpack(profile.pack).cap + Monetize.capBonus(player)) * (1 + 0.10 * hauler))
+end
+
 function Inventory.isFull(player: Player): boolean
 	local profile = profiles[player]
 	if not profile then
 		return true
 	end
-	return bagCount(profile) >= World.backpack(profile.pack).cap + Monetize.capBonus(player)
+	return bagCount(profile) >= capacity(player, profile)
+end
+
+function Inventory.countOf(player: Player, id: string): number
+	local profile = profiles[player]
+	local entry = profile and profile.inv[id]
+	return entry and entry.n or 0
+end
+
+-- Consumes plain (non-shiny) ores/materials, e.g. for crafting. Returns false
+-- if anything is missing.
+function Inventory.consumeOres(player: Player, cost: { [string]: number }): boolean
+	local profile = profiles[player]
+	if not profile then
+		return false
+	end
+	for id, need in cost do
+		if Inventory.countOf(player, id) < need then
+			return false
+		end
+	end
+	for id, need in cost do
+		local entry = profile.inv[id]
+		entry.v -= math.floor(entry.v * need / entry.n)
+		entry.n -= need
+		if entry.n <= 0 then
+			profile.inv[id] = nil
+		end
+	end
+	syncBag(player)
+	return true
+end
+
+function Inventory.addGear(player: Player, id: string, n: number)
+	local profile = profiles[player]
+	if profile then
+		profile.gear[id] = (profile.gear[id] or 0) + n
+		syncGear(player, profile)
+	end
+end
+
+function Inventory.useGear(player: Player, id: string): boolean
+	local profile = profiles[player]
+	if not profile or (profile.gear[id] or 0) < 1 then
+		return false
+	end
+	profile.gear[id] -= 1
+	syncGear(player, profile)
+	return true
+end
+
+-- Dying underground costs part of the unbanked bag (greed vs banking).
+function Inventory.applyDeathPenalty(player: Player)
+	local profile = profiles[player]
+	if not profile then
+		return
+	end
+	local lost = 0
+	for key, entry in profile.inv do
+		local take = math.floor(entry.n * World.DeathLossFraction)
+		if take > 0 then
+			local vloss = math.floor(entry.v * take / entry.n)
+			entry.n -= take
+			entry.v -= vloss
+			lost += vloss
+			if entry.n <= 0 then
+				profile.inv[key] = nil
+			end
+		end
+	end
+	if lost > 0 then
+		notify(player, ("You died in the deep and lost loot worth ~$%d! Bank it next time!"):format(lost), Color3.fromRGB(255, 80, 80))
+	end
+	syncBag(player)
 end
 
 local function rollRelic(layerIndex: number): string?
@@ -193,6 +281,19 @@ function Inventory.awardVein(player: Player, oreId: string, count: number)
 		("ORE VEIN: %dx %s (%.0fkg)%s!"):format(count, item.name, totalKg, shinies > 0 and (" (%d SHINY!)"):format(shinies) or ""),
 		Color3.fromRGB(item.color[1], item.color[2], item.color[3])
 	)
+	syncBag(player)
+end
+
+-- Bulk material award (mining bombs): flat values, single bag sync.
+function Inventory.awardBulk(player: Player, matId: string, count: number)
+	local profile = profiles[player]
+	if not profile then
+		return
+	end
+	local item = World.Items[matId]
+	for _ = 1, count do
+		addItem(profile, matId, item.value)
+	end
 	syncBag(player)
 end
 

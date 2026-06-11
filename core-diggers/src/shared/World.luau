@@ -79,11 +79,11 @@ World.Shovels = {
 	{ id = "rusty", name = "Rusty Shovel", dmg = 1, luck = 0, price = 0, color = { 140, 110, 80 } },
 	{ id = "copper", name = "Copper Shovel", dmg = 2, luck = 0, price = 250, color = { 200, 120, 70 } },
 	{ id = "iron", name = "Iron Shovel", dmg = 4, luck = 0, price = 1200, color = { 190, 190, 200 } },
-	{ id = "golden", name = "Golden Shovel", dmg = 7, luck = 0.05, price = 6000, color = { 250, 200, 70 } },
-	{ id = "crystal", name = "Crystal Shovel", dmg = 12, luck = 0.10, price = 25000, color = { 150, 220, 255 } },
-	{ id = "magma", name = "Magma Shovel", dmg = 20, luck = 0.15, price = 90000, color = { 240, 110, 50 } },
-	{ id = "void", name = "Void Shovel", dmg = 32, luck = 0.25, price = 350000, color = { 110, 60, 190 } },
-	{ id = "omega", name = "OMEGA DRILL", dmg = 50, luck = 0.40, price = 1500000, color = { 255, 0, 110 } },
+	{ id = "golden", name = "Golden Shovel", dmg = 7, luck = 0.05, price = 6000, color = { 250, 200, 70 }, costOres = { gold = 2 } },
+	{ id = "crystal", name = "Crystal Shovel", dmg = 12, luck = 0.10, price = 25000, color = { 150, 220, 255 }, costOres = { sapphire = 3 } },
+	{ id = "magma", name = "Magma Shovel", dmg = 20, luck = 0.15, price = 90000, color = { 240, 110, 50 }, costOres = { ruby = 4 } },
+	{ id = "void", name = "Void Shovel", dmg = 32, luck = 0.25, price = 350000, color = { 110, 60, 190 }, costOres = { obsidian = 4, frost_crystal = 2 } },
+	{ id = "omega", name = "OMEGA DRILL", dmg = 50, luck = 0.40, price = 1500000, color = { 255, 0, 110 }, costOres = { starmetal = 3, prism_shard = 2 } },
 }
 
 World.Backpacks = {
@@ -146,6 +146,33 @@ World.Potions = {
 	{ id = "luck", name = "Luck Potion", desc = "+50% luck for 5 min", price = 2000, duration = 300 },
 	{ id = "speed", name = "Haste Potion", desc = "2x dig speed for 5 min", price = 1500, duration = 300 },
 	{ id = "strength", name = "Power Potion", desc = "+50% damage for 5 min", price = 2500, duration = 300 },
+}
+
+-- Crafting: ores are ingredients, not just pending cash. Sell or keep?
+World.Recipes = {
+	{ id = "torch", name = "Torch", desc = "Placeable light for the deep", cost = { coal = 3, stone = 5 } },
+	{ id = "flare", name = "Recall Flare", desc = "Teleport to the surface from below layer 5", cost = { copper = 2, coal = 2 } },
+	{ id = "bomb", name = "Mining Bomb", desc = "Blasts 3x3x3 - fast, but materials only", cost = { iron = 4, coal = 6 } },
+}
+
+-- Risk: dying underground loses part of the unbanked bag; deep teleports
+-- need a flare. Greed vs banking is the core decision.
+World.DeathLossFraction = 0.5
+World.FreeTeleportMaxLayer = 5
+
+-- Darkness below this layer (client dims ambient; torches matter).
+World.DarknessStartLayer = 8
+World.TorchRange = 24
+World.MaxTorches = 80
+
+World.BombRadius = 1
+World.BombFuse = 2.5
+
+-- Prestige grants perk points: three build branches instead of a flat bonus.
+World.Perks = {
+	{ id = "miner", name = "Miner", desc = "-6% swing cooldown per level", max = 5 },
+	{ id = "prospector", name = "Prospector", desc = "+6% luck per level", max = 5 },
+	{ id = "hauler", name = "Hauler", desc = "+10% bag capacity per level", max = 5 },
 }
 
 World.SwingCooldown = 0.25

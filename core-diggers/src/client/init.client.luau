@@ -1,6 +1,8 @@
 -- HUD: cash/bag/depth/prestige panel, surface + sell buttons, shop & museum
 -- frames, notifications with SFX.
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local SoundService = game:GetService("SoundService")
@@ -222,6 +224,8 @@ end
 local shopPanel, shopContent = makePanel("SHOVEL SHOP")
 local museumPanel, museumContent = makePanel("MUSEUM — YOUR RELICS")
 local contractsPanel, contractsContent = makePanel("DAILY CONTRACTS")
+local craftPanel, craftContent = makePanel("FORGE — CRAFTING")
+local perksPanel, perksContent = makePanel("PERKS")
 
 local function rowButton(parent: Instance, height: number): TextButton
 	local button = Instance.new("TextButton")
@@ -253,10 +257,18 @@ local function refreshShop()
 			button.Text = ("%s — EQUIPPED"):format(shovel.name)
 			button.BackgroundColor3 = Color3.fromRGB(60, 130, 90)
 		else
-			button.Text = ("%s — dmg %d%s — $%s"):format(
+			local oreText = ""
+			if shovel.costOres then
+				local bits = {}
+				for oreId, need in shovel.costOres do
+					table.insert(bits, ("%d %s"):format(need, World.Items[oreId].name))
+				end
+				oreText = " + " .. table.concat(bits, ", ")
+			end
+			button.Text = ("%s — dmg %d%s — $%s%s"):format(
 				shovel.name, shovel.dmg,
 				shovel.luck > 0 and (" +%d%% luck"):format(shovel.luck * 100) or "",
-				fmt(shovel.price)
+				fmt(shovel.price), oreText
 			)
 			button.Activated:Connect(function()
 				remotes.Buy:FireServer("shovel", shovel.id)
@@ -416,7 +428,67 @@ local function refreshContracts()
 	})
 end
 
-local panels = { shopPanel, museumPanel, contractsPanel }
+local function refreshCraft()
+	for _, child in craftContent:GetChildren() do
+		if child:IsA("TextButton") or child:IsA("TextLabel") then
+			child:Destroy()
+		end
+	end
+	makeLabel(craftContent, {
+		Size = UDim2.new(1, 0, 0, 24),
+		Text = "Ores are ingredients — sell or craft?",
+		TextColor3 = Color3.fromRGB(170, 175, 190),
+	})
+	for _, recipe in World.Recipes do
+		local owned = player:GetAttribute("gear_" .. recipe.id) or 0
+		makeLabel(craftContent, {
+			Size = UDim2.new(1, 0, 0, 26),
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Text = ("%s  (owned: %d) — %s"):format(recipe.name, owned, recipe.desc),
+		})
+		local bits = {}
+		for oreId, need in recipe.cost do
+			table.insert(bits, ("%d %s"):format(need, World.Items[oreId].name))
+		end
+		local button = rowButton(craftContent, 34)
+		button.BackgroundColor3 = Color3.fromRGB(60, 130, 90)
+		button.Text = "Craft: " .. table.concat(bits, " + ")
+		button.Activated:Connect(function()
+			remotes.Buy:FireServer("craft", recipe.id)
+			task.wait(0.2)
+			refreshCraft()
+		end)
+	end
+end
+
+local function refreshPerks()
+	for _, child in perksContent:GetChildren() do
+		if child:IsA("TextButton") or child:IsA("TextLabel") then
+			child:Destroy()
+		end
+	end
+	local points = player:GetAttribute("PerkPoints") or 0
+	makeLabel(perksContent, {
+		Size = UDim2.new(1, 0, 0, 28),
+		Text = ("Perk points: %d  (crack the core for more)"):format(points),
+		TextColor3 = Color3.fromRGB(255, 205, 80),
+	})
+	for _, perk in World.Perks do
+		local level = player:GetAttribute("perk_" .. perk.id) or 0
+		local button = rowButton(perksContent, 42)
+		button.Text = ("%s  %d/%d — %s"):format(perk.name, level, perk.max, perk.desc)
+		if level < perk.max and points > 0 then
+			button.BackgroundColor3 = Color3.fromRGB(60, 130, 90)
+			button.Activated:Connect(function()
+				remotes.Buy:FireServer("perk", perk.id)
+				task.wait(0.2)
+				refreshPerks()
+			end)
+		end
+	end
+end
+
+local panels = { shopPanel, museumPanel, contractsPanel, craftPanel, perksPanel }
 local function showPanel(panel: Frame?)
 	for _, p in panels do
 		p.Visible = (p == panel)
@@ -430,6 +502,9 @@ remotes.OpenUI.OnClientEvent:Connect(function(which: string)
 	elseif which == "museum" then
 		refreshMuseum()
 		showPanel(museumPanel)
+	elseif which == "craft" then
+		refreshCraft()
+		showPanel(craftPanel)
 	end
 end)
 
@@ -467,6 +542,55 @@ end)
 bottomButton("QUESTS", 520, Color3.fromRGB(40, 44, 58)).Activated:Connect(function()
 	refreshContracts()
 	showPanel(contractsPanel.Visible and nil or contractsPanel)
+end)
+bottomButton("PERKS", 650, Color3.fromRGB(86, 60, 120)).Activated:Connect(function()
+	refreshPerks()
+	showPanel(perksPanel.Visible and nil or perksPanel)
+end)
+
+-- Gear action buttons (bottom right): torches and bombs
+local function gearButton(text: string, offsetX: number, gearId: string, remote: RemoteEvent): TextButton
+	local button = Instance.new("TextButton")
+	button.AnchorPoint = Vector2.new(1, 1)
+	button.Position = UDim2.new(1, -14 - offsetX, 1, -20)
+	button.Size = UDim2.new(0, 120, 0, 42)
+	button.Font = Enum.Font.FredokaOne
+	button.TextScaled = true
+	button.TextColor3 = Color3.new(1, 1, 1)
+	button.BackgroundColor3 = Color3.fromRGB(40, 44, 58)
+	button.Parent = gui
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 10)
+	corner.Parent = button
+	local function update()
+		local n = player:GetAttribute("gear_" .. gearId) or 0
+		button.Text = ("%s (%d)"):format(text, n)
+		button.BackgroundColor3 = n > 0 and Color3.fromRGB(60, 130, 90) or Color3.fromRGB(40, 44, 58)
+	end
+	player:GetAttributeChangedSignal("gear_" .. gearId):Connect(update)
+	update()
+	button.Activated:Connect(function()
+		remote:FireServer()
+	end)
+	return button
+end
+gearButton("TORCH", 0, "torch", remotes.PlaceTorch)
+gearButton("BOMB", 130, "bomb", remotes.UseBomb)
+
+-- The deep gets dark: dim ambient with depth so torches matter.
+local baseAmbient = Lighting.OutdoorAmbient
+local baseBrightness = Lighting.Brightness
+RunService.Heartbeat:Connect(function()
+	local character = player.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	if not root then
+		return
+	end
+	local darkStart = World.DarknessStartLayer * 4
+	local f = math.clamp((-root.Position.Y - darkStart) / 50, 0, 0.92)
+	Lighting.OutdoorAmbient = baseAmbient:Lerp(Color3.fromRGB(8, 8, 12), f)
+	Lighting.Ambient = Color3.fromRGB(60, 60, 66):Lerp(Color3.fromRGB(4, 4, 8), f)
+	Lighting.Brightness = baseBrightness * (1 - f * 0.85)
 end)
 
 -- Live bindings --------------------------------------------------------------

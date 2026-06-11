@@ -27,6 +27,22 @@ Schicht, bis zum glühenden **KERN**.
 9. Schicht-Meilensteine („You reached Ice Crust!"), Daily-Streak-Bonus, globales
    **„Deepest Diggers"-Leaderboard** (OrderedDataStore).
 
+## Konzept-Tiefe (v3): verzahnte Systeme statt linearem Pfad
+
+- **Erze sind Rohstoffe, nicht nur Cash:** Die **Schmiede** craftet Fackeln, Recall-
+  Flares und Minen-Bomben aus Erzen; Top-Schaufeln kosten Cash **+ Erze**
+  (Void-Schaufel: Obsidian *und* Frost Crystal → zwingt zurück in alte Schichten).
+  Jeder Fund stellt eine Frage: verkaufen oder behalten?
+- **Risiko-Banking:** Tod unter Tage = **50 % des ungebankten Loots weg**. Teleport
+  zur Oberfläche kostet ab Schicht 5 eine Recall-Flare. Voller Rucksack in der
+  Tiefe = echte Greed-Entscheidung.
+- **Dunkelheit + Fackeln:** Ab Schicht 8 wird es finster — Fackeln (Kohle-Sink) sind
+  platzierbare Infrastruktur, die für **alle** Spieler leuchtet (Koop-Tiefenbau).
+- **Minen-Bomben:** 3x3x3-Blast, aber nur Material-Loot (keine Erz-/Relikt-Rolls) —
+  Geschwindigkeit gegen Ausbeute.
+- **Perk-Builds:** Prestige gibt **Perk-Punkte** für 3 Zweige (Miner: Tempo,
+  Prospector: Luck, Hauler: Kapazität) — Spezialisierung statt Flat-Bonus.
+
 ## Mechanik-Tiefe (v2)
 
 - **Gewichts-Rolls:** Jeder Erzfund rollt ein Gewicht (kubische Kurve, 0.4x–8x Wert);

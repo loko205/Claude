@@ -9,7 +9,7 @@ local World = require(ReplicatedStorage.Shared.World)
 -- Remotes must exist before modules that reference them run handlers.
 local remotes = Instance.new("Folder")
 remotes.Name = "Remotes"
-for _, name in { "Notify", "OpenUI", "Buy", "SellAll", "Donate", "SellRelic", "Teleport" } do
+for _, name in { "Notify", "OpenUI", "Buy", "SellAll", "Donate", "SellRelic", "Teleport", "PlaceTorch", "UseBomb" } do
 	local remote = Instance.new("RemoteEvent")
 	remote.Name = name
 	remote.Parent = remotes
@@ -43,7 +43,7 @@ local function notify(player: Player, text: string, color: Color3?)
 end
 
 -- Station prompts open the matching client UI.
-for _, station in { { key = "sell", action = "Sell Loot", ui = "sell" }, { key = "shop", action = "Open Shop", ui = "shop" }, { key = "museum_sign", action = "Open Museum", ui = "museum" } } do
+for _, station in { { key = "sell", action = "Sell Loot", ui = "sell" }, { key = "shop", action = "Open Shop", ui = "shop" }, { key = "museum_sign", action = "Open Museum", ui = "museum" }, { key = "forge", action = "Open Forge", ui = "craft" } } do
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.ActionText = station.action
 	prompt.RequiresLineOfSight = false
@@ -74,9 +74,10 @@ Terrain.onCoreBroken = function(player: Player)
 		("%s CRACKED THE CORE! (Prestige %d)"):format(player.DisplayName, profile.prestige),
 		Color3.fromRGB(255, 120, 40)
 	)
+	player:SetAttribute("PerkPoints", (player:GetAttribute("PerkPoints") or 0) + 1)
 	notify(
 		player,
-		("PRESTIGE %d! Permanent +%d%% sell value!"):format(profile.prestige, profile.prestige * World.Core.prestigeBonus * 100),
+		("PRESTIGE %d! +%d%% sell value and +1 PERK POINT!"):format(profile.prestige, profile.prestige * World.Core.prestigeBonus * 100),
 		Color3.fromRGB(255, 205, 80)
 	)
 end
@@ -103,13 +104,30 @@ local function onPlayerAdded(player: Player)
 	player:SetAttribute("Pack", profile.pack)
 	player:SetAttribute("Prestige", profile.prestige)
 	player:SetAttribute("DepthBest", profile.depthBest)
+	for _, perk in World.Perks do
+		player:SetAttribute("perk_" .. perk.id, (profile.perks or {})[perk.id] or 0)
+	end
+	local spent = 0
+	for _, perk in World.Perks do
+		spent += (profile.perks or {})[perk.id] or 0
+	end
+	player:SetAttribute("PerkPoints", profile.prestige - spent)
 	Economy.setup(player, profile.cash)
 	Inventory.register(player, profile)
 	Contracts.register(player, profile)
 
-	player.CharacterAdded:Connect(function()
+	player.CharacterAdded:Connect(function(character)
 		task.wait(0.2)
 		Tools.give(player)
+		local humanoid = character:WaitForChild("Humanoid", 5)
+		if humanoid then
+			humanoid.Died:Connect(function()
+				-- dying underground costs part of the unbanked bag
+				if character:GetPivot().Y < -World.BlockSize * 2 then
+					Inventory.applyDeathPenalty(player)
+				end
+			end)
+		end
 	end)
 	if player.Character then
 		Tools.give(player)
@@ -161,9 +179,24 @@ remotes.Buy.OnServerEvent:Connect(function(player, kind, id)
 		if shovel.id ~= id or shovel.id == profile.shovel then
 			return
 		end
+		if shovel.costOres then
+			for oreId, need in shovel.costOres do
+				if Inventory.countOf(player, oreId) < need then
+					notify(
+						player,
+						("You also need %d %s for this shovel!"):format(need, World.Items[oreId].name),
+						Color3.fromRGB(255, 80, 80)
+					)
+					return
+				end
+			end
+		end
 		if not Economy.trySpend(player, shovel.price) then
 			notify(player, "Not enough cash!", Color3.fromRGB(255, 80, 80))
 			return
+		end
+		if shovel.costOres then
+			Inventory.consumeOres(player, shovel.costOres)
 		end
 		profile.shovel = shovel.id
 		player:SetAttribute("Shovel", shovel.id)
@@ -183,6 +216,40 @@ remotes.Buy.OnServerEvent:Connect(function(player, kind, id)
 		player:SetAttribute("Pack", pack.id)
 		Inventory.register(player, profile) -- refresh capacity attributes
 		notify(player, ("Equipped %s (%d slots)!"):format(pack.name, pack.cap), Color3.fromRGB(120, 255, 120))
+	elseif kind == "craft" then
+		for _, recipe in World.Recipes do
+			if recipe.id == id then
+				if not Inventory.consumeOres(player, recipe.cost) then
+					notify(player, "Missing materials! Check the recipe.", Color3.fromRGB(255, 80, 80))
+					return
+				end
+				Inventory.addGear(player, recipe.id, 1)
+				notify(player, ("Crafted %s!"):format(recipe.name), Color3.fromRGB(120, 220, 255))
+				return
+			end
+		end
+	elseif kind == "perk" then
+		local points = player:GetAttribute("PerkPoints") or 0
+		if points < 1 then
+			notify(player, "No perk points - crack the core for prestige!", Color3.fromRGB(255, 80, 80))
+			return
+		end
+		for _, perk in World.Perks do
+			if perk.id == id then
+				profile.perks = profile.perks or {}
+				local level = profile.perks[perk.id] or 0
+				if level >= perk.max then
+					notify(player, ("%s is already maxed."):format(perk.name), Color3.fromRGB(200, 200, 210))
+					return
+				end
+				profile.perks[perk.id] = level + 1
+				player:SetAttribute("perk_" .. perk.id, level + 1)
+				player:SetAttribute("PerkPoints", points - 1)
+				Inventory.register(player, profile) -- refresh capacity for Hauler
+				notify(player, ("%s level %d unlocked!"):format(perk.name, level + 1), Color3.fromRGB(255, 205, 80))
+				return
+			end
+		end
 	elseif kind == "potion" then
 		for _, potion in World.Potions do
 			if potion.id == id then
@@ -232,9 +299,29 @@ remotes.Teleport.OnServerEvent:Connect(function(player)
 		return
 	end
 	local character = player.Character
-	if character then
-		teleportReady[player] = now + World.TeleportCooldown
-		character:PivotTo(CFrame.new(0, 4, -68))
+	if not character then
+		return
+	end
+	-- Deep teleports consume a Recall Flare (craftable at the forge).
+	if character:GetPivot().Y < -World.FreeTeleportMaxLayer * World.BlockSize then
+		if not Inventory.useGear(player, "flare") then
+			notify(player, "Too deep! Craft a Recall Flare at the forge (or climb).", Color3.fromRGB(255, 80, 80))
+			return
+		end
+	end
+	teleportReady[player] = now + World.TeleportCooldown
+	character:PivotTo(CFrame.new(0, 4, -68))
+end)
+
+remotes.PlaceTorch.OnServerEvent:Connect(function(player)
+	if (player:GetAttribute("gear_torch") or 0) > 0 and Terrain.placeTorch(player) then
+		Inventory.useGear(player, "torch")
+	end
+end)
+
+remotes.UseBomb.OnServerEvent:Connect(function(player)
+	if Inventory.useGear(player, "bomb") then
+		Terrain.blast(player)
 	end
 end)
 

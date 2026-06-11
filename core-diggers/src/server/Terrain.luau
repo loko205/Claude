@@ -261,7 +261,9 @@ end
 
 local function swingAllowed(player: Player): boolean
 	local now = os.clock()
-	local cooldown = World.SwingCooldown * (Buffs.has(player, "speed") and 0.5 or 1)
+	local cooldown = World.SwingCooldown
+		* (Buffs.has(player, "speed") and 0.5 or 1)
+		* (1 - 0.06 * (player:GetAttribute("perk_miner") or 0))
 	if now - (lastSwing[player] or 0) < cooldown then
 		return false
 	end
@@ -427,6 +429,107 @@ function Terrain.meteor()
 				cells[entry.key] = nil
 				entry.cell.part:Destroy()
 			end
+		end
+	end)
+end
+
+-- Placeable torches (shared light infrastructure for the deep).
+local torches: { Part } = {}
+
+function Terrain.placeTorch(player: Player)
+	local character = player.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	if not root then
+		return false
+	end
+	local stick = Instance.new("Part")
+	stick.Anchored = true
+	stick.CanCollide = false
+	stick.CanQuery = false
+	stick.Size = Vector3.new(0.35, 1.6, 0.35)
+	stick.Color = Color3.fromRGB(110, 80, 55)
+	stick.Material = Enum.Material.Wood
+	stick.Position = root.Position + Vector3.new(0, -1.6, 0)
+	local flame = Instance.new("Part")
+	flame.Anchored = true
+	flame.CanCollide = false
+	flame.CanQuery = false
+	flame.Size = Vector3.new(0.55, 0.6, 0.55)
+	flame.Color = Color3.fromRGB(255, 170, 60)
+	flame.Material = Enum.Material.Neon
+	flame.Position = stick.Position + Vector3.new(0, 1.1, 0)
+	flame.Parent = stick
+	local light = Instance.new("PointLight")
+	light.Range = World.TorchRange
+	light.Brightness = 1.6
+	light.Color = Color3.fromRGB(255, 190, 110)
+	light.Parent = flame
+	stick.Parent = folder
+	table.insert(torches, stick)
+	if #torches > World.MaxTorches then
+		table.remove(torches, 1):Destroy()
+	end
+	return true
+end
+
+-- Mining bomb: clears a 3x3x3 cube around the player. Fast, but yields layer
+-- materials only - no ore/relic rolls (speed vs loot tradeoff).
+function Terrain.blast(player: Player)
+	local character = player.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	if not root then
+		return
+	end
+	local origin = root.Position
+	local fuse = Instance.new("Part")
+	fuse.Anchored = true
+	fuse.CanCollide = false
+	fuse.Shape = Enum.PartType.Ball
+	fuse.Size = Vector3.new(1.4, 1.4, 1.4)
+	fuse.Color = Color3.fromRGB(40, 40, 46)
+	fuse.Position = origin + Vector3.new(0, -2, 0)
+	fuse.Parent = folder
+	task.spawn(function()
+		for _ = 1, math.floor(World.BombFuse / 0.25) do
+			fuse.Color = fuse.Color == Color3.fromRGB(40, 40, 46) and Color3.fromRGB(255, 80, 60) or Color3.fromRGB(40, 40, 46)
+			task.wait(0.25)
+		end
+		local center = fuse.Position
+		fuse:Destroy()
+		breakFx(center, Color3.fromRGB(255, 140, 60))
+		local ci = math.floor(center.X / BS + (SIZE_X + 1) / 2 + 0.5)
+		local cj = math.floor(center.Z / BS + (SIZE_Z + 1) / 2 + 0.5)
+		local ck = math.floor(0.5 - center.Y / BS + 0.5)
+		local broken = 0
+		local matCounts: { [string]: number } = {}
+		for di = -World.BombRadius, World.BombRadius do
+			for dj = -World.BombRadius, World.BombRadius do
+				for dk = -World.BombRadius, World.BombRadius do
+					local cellKey = key(ci + di, cj + dj, ck + dk)
+					local cell = cells[cellKey]
+					if type(cell) == "table" and cell.part.Parent then
+						cells[cellKey] = "mined"
+						cell.part:Destroy()
+						broken += 1
+						if not cell.lava then
+							matCounts[cell.layer.matId] = (matCounts[cell.layer.matId] or 0) + 1
+						end
+						Contracts.onBlock(player)
+						reveal(cell.i, cell.j, cell.k + 1)
+						reveal(cell.i, cell.j, cell.k - 1)
+						reveal(cell.i + 1, cell.j, cell.k)
+						reveal(cell.i - 1, cell.j, cell.k)
+						reveal(cell.i, cell.j + 1, cell.k)
+						reveal(cell.i, cell.j - 1, cell.k)
+					end
+				end
+			end
+		end
+		for matId, count in matCounts do
+			Inventory.awardBulk(player, matId, count)
+		end
+		if broken > 0 then
+			floatText(center, ("BOOM! %d blocks"):format(broken), Color3.fromRGB(255, 140, 60))
 		end
 	end)
 end
