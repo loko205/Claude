@@ -86,6 +86,15 @@ Neu rendern: `luau tools/export_world.luau > /tmp/cd_world.json`, dann
 `cd tools && uv run --no-project --with pillow python render_overview.py /tmp/cd_world.json ../docs/island.png`
 (analog `render_relics.py`).
 
+## Headless-Integrationstest
+
+`python3 tools/sim/build_sim.py` baut die echten Server-Module mit einem
+Roblox-API-Stub (Instances, Signals, virtuelle Uhr) in eine Luau-Datei und
+spielt eine komplette Session durch: Join → Daily/Contracts → Graben → Loot →
+Verkaufen → erz-gateter Schaufelkauf → Crafting → Fackel → Flare-Teleport →
+Death-Penalty → Bombe → Perks → Tränke → Meteor → Save beim Verlassen.
+25 Assertions; läuft mit dem Standalone-`luau`-CLI, kein Studio nötig.
+
 ## Struktur
 
 ```
