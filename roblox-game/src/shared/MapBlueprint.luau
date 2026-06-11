@@ -248,10 +248,10 @@ function MapBlueprint.build()
 			end
 
 			-- 12 slot pads in two rows
-			for j = 1, 12 do
-				local col = (j - 1) % 6
-				local row = j <= 6 and -4.5 or 4.5
-				local px = x - 10 + col * 4
+			for j = 1, 10 do
+				local col = (j - 1) % 5
+				local row = j <= 5 and -4.5 or 4.5
+				local px = x - 11 + col * 5.5
 				add({ 3, 0.34, 3 }, { px, 1.42, z + row }, { c = { 70, 72, 80 } })
 				add({ 2.35, 0.16, 2.35 }, { px, 1.67, z + row }, {
 					c = { 185, 188, 196 },

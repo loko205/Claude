@@ -6,7 +6,7 @@ local Config = {
 	MaxItemsOnBelt = 12,
 
 	-- Plots
-	PlotSlots = 12,
+	PlotSlots = 10, -- 2 rows of 5; wider spacing so big characters don't overlap
 	DeliveryRadius = 16, -- distance to plot center that counts as "home"
 
 	-- Economy
