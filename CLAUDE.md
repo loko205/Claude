@@ -7,7 +7,8 @@ Requirement: **everything free** (no Higgsfield, no paid APIs). Videos are in **
 ## Goal
 Vertical 55–70 s animated story shorts in the style of the channel **Ricks Clips (@RicksClips3000)**, built with the
 free skill https://github.com/mromidev/claude-animated-shorts (Remotion + three.js, 2D ink characters in 3D sets).
-Install that skill here and read its SKILL.md and references/STYLE_BIBLE.md before building anything.
+Installed in `.claude/skills/animated-shorts` – read its SKILL.md and references/STYLE_BIBLE.md before building.
+The skill says "no captions" – Thomas's rule overrides that: we DO want 1–2-word captions.
 
 ## What Ricks Clips does (researched; titles + views as of 8 Nov 2026)
 Top: The Ancient Jar That Warned an Empire (33M) · Why Perfect Railroads Don't Work (27M) · The Job Nobody Wants in
@@ -54,8 +55,9 @@ Visuals: low wide gliding camera, few hard cuts, purple-blue shadows (never blac
 
 ## Running from the phone (Claude Code cloud sessions)
 - This repo is used from the Code tab of the Claude app. The cloud VM (Ubuntu, 4 vCPU, 16 GB RAM, no GPU) clones the
-  repo fresh each session: run `cd remotion && npm install`, `pip install kokoro-onnx soundfile scipy`, download the
-  Kokoro model, before rendering. Keep renders in background chunks (commands time out after ~10 min foreground).
+  repo fresh each session: run `bash setup.sh` (npm install, Kokoro deps + model, model symlinks) before rendering.
+  Remotion can't download its Chrome here (remotion.media blocked); remotion.config.ts + scripts use the preinstalled
+  Playwright headless shell automatically. Keep renders in background chunks (commands time out after ~10 min foreground).
 - Environment network access must be **Full** (or Custom incl. github.com release assets, YouTube, Google APIs).
 - Push finished MP4s/stills to a `renders/` branch or send them so Thomas can open them on the phone.
 - Video analysis: the `watch` skill is committed in `.claude/skills/watch` (from bradautomates/claude-video, MIT).

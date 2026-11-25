@@ -3,7 +3,7 @@ import { bundle } from "@remotion/bundler";
 import { renderMedia, selectComposition } from "@remotion/renderer";
 import path from "node:path";
 const [comp, out, from, to, scale = "1"] = process.argv.slice(2);
-const browserExecutable = process.env.CHROME || "/usr/bin/google-chrome";
+const browserExecutable = process.env.CHROME || ((await import("node:fs")).existsSync("/usr/bin/google-chrome") ? "/usr/bin/google-chrome" : "/opt/pw-browsers/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell");
 const chromiumOptions = { gl: process.env.GL || "swangle" };
 const inputProps = JSON.parse(process.env.PROPS || "{}");
 const serveUrl = await bundle({ entryPoint: path.resolve("src/index.ts"), publicDir: path.resolve("public") });

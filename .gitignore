@@ -5,3 +5,4 @@ out/
 *.wav
 *.mp4
 .env
+voice/models/
