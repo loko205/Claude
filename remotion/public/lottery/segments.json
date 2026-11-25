@@ -1,0 +1,110 @@
+[
+ {
+  "id": "h1",
+  "text": "An old man spent thirty-six hundred dollars on lottery tickets, and prayed nobody would hit the jackpot.",
+  "start": 0.08,
+  "end": 5.195
+ },
+ {
+  "id": "s1",
+  "text": "You see, he's sold lottery tickets in his own little store for years, and never bought a single one.",
+  "start": 5.315,
+  "end": 9.981
+ },
+ {
+  "id": "s2",
+  "text": "Then a new game shows up, he reads the rules on the back, and three minutes later he's emptying his savings.",
+  "start": 10.041,
+  "end": 15.11
+ },
+ {
+  "id": "m0",
+  "text": "The kid behind the counter prints tickets for an hour straight.",
+  "start": 15.19,
+  "end": 17.765
+ },
+ {
+  "id": "m1",
+  "text": "Grandpa, you know you only need one to win, right?",
+  "start": 17.805,
+  "end": 19.939
+ },
+ {
+  "id": "e1",
+  "text": "He doesn't answer. He just stares at the jackpot sign.",
+  "start": 20.019,
+  "end": 22.562
+ },
+ {
+  "id": "e2",
+  "text": "Draw night, nobody hits the jackpot, and he walks out with sixty-three hundred dollars.",
+  "start": 22.662,
+  "end": 26.776
+ },
+ {
+  "id": "m2",
+  "text": "Beginner's luck, says the kid.",
+  "start": 26.836,
+  "end": 27.971
+ },
+ {
+  "id": "e3",
+  "text": "So next time, he brings his wife, and they buy so many tickets the kid misses his lunch break.",
+  "start": 28.071,
+  "end": 32.688
+ },
+ {
+  "id": "m3",
+  "text": "You two are gonna lose the house.",
+  "start": 32.728,
+  "end": 33.981
+ },
+ {
+  "id": "q1",
+  "text": "Wait, why would anyone want nobody to win?",
+  "start": 34.121,
+  "end": 36.027
+ },
+ {
+  "id": "y1",
+  "text": "You see, this game had one weird rule.",
+  "start": 36.127,
+  "end": 37.726
+ },
+ {
+  "id": "y2",
+  "text": "When the jackpot got huge and nobody won it, the money got split between everyone who matched just a few numbers.",
+  "start": 37.766,
+  "end": 43.249
+ },
+ {
+  "id": "y3",
+  "text": "It's like a birthday party where the birthday kid never shows up.",
+  "start": 43.309,
+  "end": 46.284
+ },
+ {
+  "id": "y4",
+  "text": "Nobody gets the whole cake, so everyone's slice gets way bigger.",
+  "start": 46.324,
+  "end": 49.527
+ },
+ {
+  "id": "y5",
+  "text": "And once every slice was worth more than a ticket, buying more tickets wasn't gambling. It was math.",
+  "start": 49.587,
+  "end": 54.632
+ },
+ {
+  "id": "p1",
+  "text": "For nine years, he and his wife only played on those nights, and won twenty-six million dollars.",
+  "start": 54.772,
+  "end": 59.501
+ },
+ {
+  "id": "p2",
+  "text": "And the kid who laughed printed every single ticket.",
+  "start": 59.581,
+  "end": 61.717
+ }
+]
