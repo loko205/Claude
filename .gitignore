@@ -7,3 +7,6 @@ out/
 .env
 voice/models/
 __pycache__/
+research/err.txt
+research/subs/
+research/gemini/*.err
