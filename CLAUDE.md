@@ -17,6 +17,8 @@ Cannonballs · Why the Second Draw Always Wins · The Burglar Who Only Moved Fur
 Lottery · The Pink Prison Cell Experiment · He Could Spot Winning Tickets Just by Looking · How a Mirror Rigged a Horse
 Race · This Shape Saved Roller Coasters · The Town Built Around a Button.
 => Little-known curiosities: clever old inventions/customs explained, money loopholes/tricks. NOT famous events.
+**Full measured analysis of 13 top shorts (transcripts, mocker lines, captions, pacing): research/ANALYSIS.md.
+Read it before scripting.**
 
 Story formula (~220 words, told like a kid explaining to a friend, no dates/titles, max one name):
 1. Hook 0–3 s: 9–14 words, something strange someone did, reason hidden.
