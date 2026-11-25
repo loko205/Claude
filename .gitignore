@@ -6,3 +6,4 @@ out/
 *.mp4
 .env
 voice/models/
+__pycache__/
