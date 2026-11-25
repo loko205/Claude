@@ -10,3 +10,4 @@ __pycache__/
 research/err.txt
 research/subs/
 research/gemini/*.err
+*.mp3
